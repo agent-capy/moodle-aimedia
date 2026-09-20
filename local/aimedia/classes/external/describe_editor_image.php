@@ -81,6 +81,18 @@ class describe_editor_image extends external_api {
         self::validate_context($context);
         require_capability('local/aimedia:use', $context);
 
+        // The site's AI usage policy has to be accepted before anything is sent,
+        // as the page does and as the placements Moodle ships require. Core does
+        // not check it on the way through, and a button is not a place to assume
+        // somebody has read anything.
+        if (!\core_ai\manager::get_user_policy_status((int) $USER->id)) {
+            return [
+                'success' => false,
+                'text' => '',
+                'error' => get_string('error:policynotaccepted', 'local_aimedia'),
+            ];
+        }
+
         $file = editor_file::resolve($imageurl);
         if ($file === null) {
             return [

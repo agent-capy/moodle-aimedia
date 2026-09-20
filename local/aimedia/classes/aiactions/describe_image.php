@@ -126,6 +126,8 @@ class describe_image extends base {
         $record->finishreason = $responsearr['finishreason'] ?? null;
         $record->prompttokens = $responsearr['prompttokens'] ?? null;
         $record->completiontokens = $responsearr['completiontokens'] ?? null;
+        $record->userid = (int) $this->userid;
+        $record->contextid = (int) $this->contextid;
         $record->timecreated = $this->timecreated;
 
         return $DB->insert_record($this->get_tablename(), $record);

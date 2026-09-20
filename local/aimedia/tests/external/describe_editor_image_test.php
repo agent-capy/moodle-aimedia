@@ -57,11 +57,21 @@ final class describe_editor_image_test extends \advanced_testcase {
         return $CFG->wwwroot . '/draftfile.php/' . $contextid . '/user/draft/7/diagram.png';
     }
 
+    /**
+     * Accept the site's AI usage policy for somebody, as the page lets them.
+     *
+     * @param int $userid Who accepts it.
+     */
+    protected function accept_policy(int $userid): void {
+        \core_ai\manager::user_policy_accepted($userid, \context_system::instance()->id);
+    }
+
     public function test_somebody_elses_picture_is_refused(): void {
         $owner = $this->getDataGenerator()->create_user();
         $url = $this->picture((int) $owner->id);
 
         $this->setAdminUser();
+        $this->accept_policy((int) get_admin()->id);
         $result = describe_editor_image::execute(0, $url);
 
         $this->assertFalse($result['success']);
@@ -71,6 +81,7 @@ final class describe_editor_image_test extends \advanced_testcase {
 
     public function test_a_site_that_cannot_look_says_so_rather_than_failing(): void {
         $this->setAdminUser();
+        $this->accept_policy((int) get_admin()->id);
         $result = describe_editor_image::execute(0, $this->picture((int) get_admin()->id));
 
         $this->assertFalse($result['success']);
@@ -80,6 +91,7 @@ final class describe_editor_image_test extends \advanced_testcase {
     public function test_the_capability_is_what_allows_it(): void {
         $user = $this->getDataGenerator()->create_user();
         $this->setUser($user);
+        $this->accept_policy((int) $user->id);
         $url = $this->picture((int) $user->id);
 
         $this->expectException(\required_capability_exception::class);
@@ -95,9 +107,20 @@ final class describe_editor_image_test extends \advanced_testcase {
         role_assign($roleid, $teacher->id, $context->id);
 
         $this->setUser($teacher);
+        $this->accept_policy((int) $teacher->id);
         $result = describe_editor_image::execute($context->id, $this->picture((int) $teacher->id));
 
         $this->assertFalse($result['success']);
         $this->assertSame(get_string('error:noprovider', 'local_aimedia'), $result['error']);
+    }
+
+    public function test_the_ai_policy_must_be_accepted_before_anything_is_sent(): void {
+        // Core does not check the policy on the way through, and a button is not a
+        // place to assume somebody has read anything.
+        $this->setAdminUser();
+        $result = describe_editor_image::execute(0, $this->picture((int) get_admin()->id));
+
+        $this->assertFalse($result['success']);
+        $this->assertSame(get_string('error:policynotaccepted', 'local_aimedia'), $result['error']);
     }
 }

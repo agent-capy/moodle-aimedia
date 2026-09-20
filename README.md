@@ -73,6 +73,10 @@ you may send it is that component's judgement, not this plugin's.
 
 ⚠ What a model heard is inserted as **text, never as markup**.
 
+⚠ The site's **AI usage policy** has to be accepted before either button sends
+anything. Core does not check it on the way through, so the buttons check it
+themselves; the page is where somebody reads and accepts it.
+
 The buttons are offered only in editors that can hold files, and only to people
 with `local/aimedia:use`.
 
@@ -126,11 +130,19 @@ moment to find out.
 ## What is stored
 
 `local_aimedia_transcript`: the transcript, the recording's content hash, its
-name and size, and when it happened. `local_aimedia_describe`: the question, the
-answer, and the same about the picture.
+name and size, who asked, where, and when. `local_aimedia_describe`: the
+question, the answer, and the same about the picture.
 
-⚠ **Neither the recording nor the picture is kept.** A transcript is the words
-somebody said, so the table names nobody.
+⚠ **Neither the recording nor the picture is kept**, only its content hash.
+
+These tables held no user id to begin with, on the reasoning that a transcript
+names nobody. That was wrong: core's action register points at these rows and
+carries the user, so they were reachable from a person while being invisible to
+every privacy request. They now hold the user and the context themselves, which
+also means export and deletion do not depend on core's register still being
+there when this plugin's privacy provider runs.
+
+⭐ Everything here is exported and deleted through Moodle's Privacy API.
 
 ## Licence
 

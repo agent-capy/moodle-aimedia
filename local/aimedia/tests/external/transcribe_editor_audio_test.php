@@ -57,11 +57,21 @@ final class transcribe_editor_audio_test extends \advanced_testcase {
         return $CFG->wwwroot . '/draftfile.php/' . $contextid . '/user/draft/7/recording-audio.ogg';
     }
 
+    /**
+     * Accept the site's AI usage policy for somebody, as the page lets them.
+     *
+     * @param int $userid Who accepts it.
+     */
+    protected function accept_policy(int $userid): void {
+        \core_ai\manager::user_policy_accepted($userid, \context_system::instance()->id);
+    }
+
     public function test_somebody_elses_recording_is_refused(): void {
         $owner = $this->getDataGenerator()->create_user();
         $url = $this->recording((int) $owner->id);
 
         $this->setAdminUser();
+        $this->accept_policy((int) get_admin()->id);
         $result = transcribe_editor_audio::execute(0, $url);
 
         $this->assertFalse($result['success']);
@@ -73,6 +83,7 @@ final class transcribe_editor_audio_test extends \advanced_testcase {
         // No AI provider is installed in a test site, so this is the honest answer
         // and it has to arrive as an answer, not as an exception in the editor.
         $this->setAdminUser();
+        $this->accept_policy((int) get_admin()->id);
         $result = transcribe_editor_audio::execute(0, $this->recording((int) get_admin()->id));
 
         $this->assertFalse($result['success']);
@@ -82,6 +93,7 @@ final class transcribe_editor_audio_test extends \advanced_testcase {
     public function test_the_capability_is_what_allows_it(): void {
         $user = $this->getDataGenerator()->create_user();
         $this->setUser($user);
+        $this->accept_policy((int) $user->id);
         $url = $this->recording((int) $user->id);
 
         $this->expectException(\required_capability_exception::class);
@@ -99,6 +111,7 @@ final class transcribe_editor_audio_test extends \advanced_testcase {
         role_assign($roleid, $teacher->id, $context->id);
 
         $this->setUser($teacher);
+        $this->accept_policy((int) $teacher->id);
         $result = transcribe_editor_audio::execute($context->id, $this->recording((int) $teacher->id));
 
         // Allowed through: the answer is about the site, not about permission.
@@ -120,6 +133,7 @@ final class transcribe_editor_audio_test extends \advanced_testcase {
         role_assign($roleid, $user->id, $allowedcontext->id);
 
         $this->setUser($user);
+        $this->accept_policy((int) $user->id);
         $url = $this->recording((int) $user->id);
 
         $this->expectException(\moodle_exception::class);
@@ -137,6 +151,7 @@ final class transcribe_editor_audio_test extends \advanced_testcase {
         $this->getDataGenerator()->enrol_user($user->id, $studying->id, 'student');
 
         $this->setUser($user);
+        $this->accept_policy((int) $user->id);
         $url = $this->recording((int) $user->id);
 
         // Allowed where they teach.
@@ -146,5 +161,15 @@ final class transcribe_editor_audio_test extends \advanced_testcase {
         // Refused where they study.
         $this->expectException(\required_capability_exception::class);
         transcribe_editor_audio::execute(\context_course::instance($studying->id)->id, $url);
+    }
+
+    public function test_the_ai_policy_must_be_accepted_before_anything_is_sent(): void {
+        // Core does not check the policy on the way through, and a button is not a
+        // place to assume somebody has read anything.
+        $this->setAdminUser();
+        $result = transcribe_editor_audio::execute(0, $this->recording((int) get_admin()->id));
+
+        $this->assertFalse($result['success']);
+        $this->assertSame(get_string('error:policynotaccepted', 'local_aimedia'), $result['error']);
     }
 }

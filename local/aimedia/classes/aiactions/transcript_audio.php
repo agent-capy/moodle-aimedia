@@ -113,6 +113,8 @@ class transcript_audio extends base {
         $record->language = $this->language === '' ? null : $this->language;
         $record->transcript = $responsearr['transcript'] ?? null;
         $record->durationms = $responsearr['durationms'] ?? null;
+        $record->userid = (int) $this->userid;
+        $record->contextid = (int) $this->contextid;
         $record->timecreated = $this->timecreated;
 
         return $DB->insert_record($this->get_tablename(), $record);

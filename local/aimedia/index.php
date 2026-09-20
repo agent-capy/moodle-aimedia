@@ -104,21 +104,25 @@ if ($actions && $accepted && ($data = $form->get_data())) {
             question: trim((string) ($data->question ?? '')),
         );
 
-        $response = $manager->process_action($action);
-        if ($response->get_success()) {
-            $payload = $response->get_response_data();
-            $result = (object) [
-                'text' => (string) ($payload['transcript'] ?? $payload['generatedcontent'] ?? ''),
-                'model' => (string) ($payload['model'] ?? ''),
-                'filename' => $file->get_filename(),
-            ];
-        } else {
-            $failure = $response->get_errormessage();
-        }
-
         // The upload was the means, not the point. Keeping somebody's voice or face
-        // on the server afterwards would be keeping it for no reason.
-        $file->delete();
+        // on the server afterwards would be keeping it for no reason, so the delete
+        // is in a finally: an exception on the way through must not be the reason a
+        // recording stays on the site.
+        try {
+            $response = $manager->process_action($action);
+            if ($response->get_success()) {
+                $payload = $response->get_response_data();
+                $result = (object) [
+                    'text' => (string) ($payload['transcript'] ?? $payload['generatedcontent'] ?? ''),
+                    'model' => (string) ($payload['model'] ?? ''),
+                    'filename' => $file->get_filename(),
+                ];
+            } else {
+                $failure = $response->get_errormessage();
+            }
+        } finally {
+            $file->delete();
+        }
     }
 }
 
