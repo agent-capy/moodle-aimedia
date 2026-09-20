@@ -209,4 +209,116 @@ final class media_request_test extends \advanced_testcase {
         $this->assertSame('What was said', $outcome->data['transcript']);
         $this->assertSame('', $outcome->error);
     }
+
+    /**
+     * A file of a chosen size and type, in the pool.
+     *
+     * @param string $filename What it is called.
+     * @param int $bytes How big to make it.
+     * @param string $mimetype What it claims to be.
+     * @return \stored_file The file.
+     */
+    protected function upload_sized(string $filename, int $bytes, string $mimetype): \stored_file {
+        return get_file_storage()->create_file_from_string([
+            'contextid' => \context_system::instance()->id,
+            'component' => 'local_aimedia',
+            'filearea' => 'submitted',
+            'itemid' => 2,
+            'filepath' => '/',
+            'filename' => $filename,
+            'mimetype' => $mimetype,
+        ], str_repeat('x', $bytes));
+    }
+
+    /**
+     * A manager that must never be asked to do anything.
+     *
+     * @return \core_ai\manager The stand in.
+     */
+    protected function manager_never_called(): \core_ai\manager {
+        $manager = $this->createMock(\core_ai\manager::class);
+        $manager->expects($this->never())->method('process_action');
+
+        return $manager;
+    }
+
+    public function test_a_file_larger_than_the_limit_is_refused_before_anything_is_sent(): void {
+        // The form states a limit, and the editor buttons never see a form. A provider
+        // reads the whole file into memory to send it, so the size is checked on the
+        // road they share rather than on the one screen that happens to have a form.
+        $file = $this->upload_sized(
+            'huge.png',
+            media_limits::IMAGE_BYTES + 1,
+            'image/png',
+        );
+
+        $outcome = media_request::run(
+            $this->manager_never_called(),
+            media_request::make(
+                class: describe_image::class,
+                contextid: \context_system::instance()->id,
+                userid: (int) get_admin()->id,
+                file: $file,
+            ),
+        );
+
+        $this->assertFalse($outcome->success);
+        $this->assertNotEmpty($outcome->error);
+    }
+
+    public function test_a_recording_may_be_larger_than_a_picture(): void {
+        // A picture is base64 encoded into a JSON body and costs several times its
+        // own size again; a recording is sent as multipart and copied once.
+        $this->assertGreaterThan(media_limits::IMAGE_BYTES, media_limits::AUDIO_BYTES);
+        $this->assertSame(media_limits::AUDIO_BYTES, media_limits::form_max_bytes());
+    }
+
+    public function test_a_recording_sent_as_a_picture_is_refused(): void {
+        $file = $this->upload_sized('talk.ogg', 64, 'audio/ogg');
+
+        $outcome = media_request::run(
+            $this->manager_never_called(),
+            media_request::make(
+                class: describe_image::class,
+                contextid: \context_system::instance()->id,
+                userid: (int) get_admin()->id,
+                file: $file,
+            ),
+        );
+
+        $this->assertFalse($outcome->success);
+        $this->assertSame(
+            get_string('error:filetypenotaccepted', 'local_aimedia'),
+            $outcome->error,
+        );
+    }
+
+    public function test_a_file_within_the_limits_goes_through(): void {
+        $response = $this->createStub(\core_ai\aiactions\responses\response_base::class);
+        $response->method('get_success')->willReturn(true);
+        $response->method('get_response_data')->willReturn(['generatedcontent' => 'A cat']);
+
+        $outcome = media_request::run(
+            $this->manager_returning($response),
+            media_request::make(
+                class: describe_image::class,
+                contextid: \context_system::instance()->id,
+                userid: (int) get_admin()->id,
+                file: $this->upload_sized('small.png', 64, 'image/png'),
+            ),
+        );
+
+        $this->assertTrue($outcome->success);
+        $this->assertSame('A cat', $outcome->data['generatedcontent']);
+    }
+
+    public function test_the_form_offers_everything_any_action_accepts(): void {
+        $offered = media_limits::accepted_types();
+
+        foreach (media_request::ACTIONS as $class) {
+            foreach (media_limits::groups($class) as $group) {
+                $this->assertContains($group, $offered, $class);
+            }
+        }
+    }
 }

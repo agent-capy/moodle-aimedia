@@ -29,7 +29,13 @@ use local_aimedia\aiactions\transcript_audio;
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 class media_form extends \moodleform {
-    /** @var int The largest file this form accepts, in bytes. */
+    /**
+     * @var int The largest file this form accepts, in bytes.
+     *
+     * The picker is shown before the action is chosen, so it can only enforce the
+     * most generous of the limits. media_limits checks the narrower one once the
+     * action is known, which is also where the editor buttons are checked.
+     */
     public const MAX_BYTES = 30 * 1024 * 1024;
 
     #[\Override]
@@ -53,7 +59,10 @@ class media_form extends \moodleform {
             'media',
             get_string('form:file', 'local_aimedia'),
             null,
-            ['maxbytes' => self::MAX_BYTES, 'accepted_types' => ['audio', 'web_image']],
+            [
+                'maxbytes' => \local_aimedia\media_limits::form_max_bytes(),
+                'accepted_types' => \local_aimedia\media_limits::accepted_types(),
+            ],
         );
         $mform->addRule('media', null, 'required', null, 'client');
         $mform->addHelpButton('media', 'form:file', 'local_aimedia');

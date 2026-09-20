@@ -127,6 +127,23 @@ the placements Moodle ships require it.
 can perform would be an option that fails after the upload, which is the worst
 moment to find out.
 
+## What it will send
+
+| Action | Largest file | Accepted |
+| --- | --- | --- |
+| Transcribe a recording | 30 MiB | Anything core counts as `audio` |
+| Describe a picture | 8 MiB | Anything core counts as `web_image` |
+
+The two differ because a provider reads the whole file into memory to send it, and
+a picture is base64 encoded into a JSON body on the way, which costs several times
+the file again; a recording is sent as multipart and copied once.
+
+⚠ The limits are enforced where both roads meet, not on the upload form. The form
+is one way in and the editor buttons are another, and the second never sees a form
+at all — it calls a web service, where a draft file of any size can be named.
+The file picker is given the more generous of the two limits, because the action
+has not been chosen when it is drawn; the narrower one is applied once it has.
+
 ## What is stored
 
 `local_aimedia_transcript`: the transcript, the recording's content hash, its

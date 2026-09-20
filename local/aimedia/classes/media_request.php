@@ -113,11 +113,26 @@ class media_request {
      * never matched on a site without it; nothing else is caught, so a provider that
      * throws because something is genuinely wrong still surfaces as it should.
      *
+     * The file the action carries is checked against this plugin's limits first. A
+     * provider reads the whole of it into memory, and an image is base64 encoded into
+     * a JSON body on the way, so the size is not somebody else's problem.
+     *
      * @param manager $manager The AI manager.
      * @param base $action The action to run.
      * @return \stdClass success (bool), data (array) and error (string).
      */
     public static function run(manager $manager, base $action): \stdClass {
+        // The last point both roads pass through before anything is sent. A form can
+        // state a limit; the editor buttons never see a form, so the limit is checked
+        // here instead of being trusted to whichever screen happened to be used.
+        $file = $action->get_configuration('file');
+        if ($file instanceof \stored_file) {
+            $refused = media_limits::check($action::class, $file);
+            if ($refused !== null) {
+                return (object) ['success' => false, 'data' => [], 'error' => $refused];
+            }
+        }
+
         try {
             $response = $manager->process_action($action);
         } catch (\aiprovider_router\exception\declined_request $e) {
