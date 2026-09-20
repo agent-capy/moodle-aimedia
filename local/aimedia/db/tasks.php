@@ -15,7 +15,7 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * Version details for local_aimedia.
+ * Scheduled tasks for local_aimedia.
  *
  * @package    local_aimedia
  * @copyright  2026 UDAGAWA Mitsuru
@@ -24,8 +24,16 @@
 
 defined('MOODLE_INTERNAL') || die();
 
-$plugin->component = 'local_aimedia';
-$plugin->version = 2026092010;
-$plugin->requires = 2025041400; // Moodle 5.0.0 or later.
-$plugin->maturity = MATURITY_ALPHA;
-$plugin->release = '0.1.0-dev';
+$tasks = [
+    [
+        // Nightly. What it removes is already abandoned, so there is nothing to be
+        // gained by looking for it more often, and the hour is a quiet one.
+        'classname' => 'local_aimedia\task\purge_submitted',
+        'blocking' => 0,
+        'minute' => '20',
+        'hour' => '4',
+        'day' => '*',
+        'month' => '*',
+        'dayofweek' => '*',
+    ],
+];

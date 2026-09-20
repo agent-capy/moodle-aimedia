@@ -59,3 +59,4 @@ $string['privacy:metadata:transcript:transcript'] = 'モデルが聞き取った
 $string['privacy:metadata:userid'] = '要求した利用者。';
 $string['result'] = '応答';
 $string['result:about'] = '{$a->filename} について、{$a->model} が答えました。';
+$string['task:purgesubmitted'] = 'AI に送ったあと片付けられなかったメディアを削除する';

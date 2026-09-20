@@ -79,37 +79,36 @@ $result = null;
 $failure = null;
 
 if ($actions && $accepted && ($data = $form->get_data())) {
+    // Checked before anything is copied anywhere. Only what is on offer, and only by
+    // exact match: the select's value reaches here as text, and falling back to a
+    // default would quietly do something other than what was asked.
+    $class = (string) $data->action;
+    if (!array_key_exists($class, $actions)) {
+        throw new moodle_exception('error:unknownaction', 'local_aimedia');
+    }
+
     $draftid = (int) $data->media;
     $storage = get_file_storage();
     file_save_draft_area_files($draftid, $context->id, 'local_aimedia', 'submitted', $draftid);
-    $files = $storage->get_area_files($context->id, 'local_aimedia', 'submitted', $draftid, 'id', false);
-    $file = reset($files);
 
-    if ($file === false) {
-        $failure = get_string('error:nofile', 'local_aimedia');
-    } else {
-        // Only what is on offer, and only by exact match: the select's value
-        // reaches here as text, and falling back to a default would quietly do
-        // something other than what was asked.
-        $class = (string) $data->action;
-        if (!array_key_exists($class, $actions)) {
-            throw new moodle_exception('error:unknownaction', 'local_aimedia');
-        }
+    // The upload was the means, not the point. Keeping somebody's voice or face on
+    // the server afterwards would be keeping it for no reason, so everything from the
+    // copy onwards is inside a try and the whole area goes in the finally. An
+    // exception anywhere in here must not be the reason a recording stays on the site.
+    try {
+        $files = $storage->get_area_files($context->id, 'local_aimedia', 'submitted', $draftid, 'id', false);
+        $file = reset($files);
 
-        $action = media_request::make(
-            class: $class,
-            contextid: $context->id,
-            userid: $USER->id,
-            file: $file,
-            question: trim((string) ($data->question ?? '')),
-        );
-
-        // The upload was the means, not the point. Keeping somebody's voice or face
-        // on the server afterwards would be keeping it for no reason, so the delete
-        // is in a finally: an exception on the way through must not be the reason a
-        // recording stays on the site.
-        try {
-            $outcome = media_request::run($manager, $action);
+        if ($file === false) {
+            $failure = get_string('error:nofile', 'local_aimedia');
+        } else {
+            $outcome = media_request::run($manager, media_request::make(
+                class: $class,
+                contextid: $context->id,
+                userid: $USER->id,
+                file: $file,
+                question: trim((string) ($data->question ?? '')),
+            ));
             if ($outcome->success) {
                 $result = (object) [
                     'text' => (string) ($outcome->data['transcript'] ?? $outcome->data['generatedcontent'] ?? ''),
@@ -119,9 +118,10 @@ if ($actions && $accepted && ($data = $form->get_data())) {
             } else {
                 $failure = $outcome->error;
             }
-        } finally {
-            $file->delete();
         }
+    } finally {
+        // The area rather than the one file, so that the directory record goes too.
+        $storage->delete_area_files($context->id, 'local_aimedia', 'submitted', $draftid);
     }
 }
 

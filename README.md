@@ -66,6 +66,12 @@ search, nothing to quote, and nothing at all for somebody who cannot hear it.
 The words go into the page next to the recording, where the author can read them
 over and correct them before anybody else sees them.
 
+⭐ **What you upload to the page is deleted as soon as the answer comes back**, whether
+the answer worked or not. A recording is somebody's voice and a picture is often
+somebody's face, and keeping either once the request is over would be keeping it for
+no reason. A nightly task removes anything an interrupted request left behind -- a
+timeout or a browser that gave up never reaches the deletion.
+
 ⚠ **Only files you have just added.** A button sends the file behind the image or
 the player, and only a draft file of your own can be resolved to one — a file
 already saved into a page belongs to whichever component saved it, and whether

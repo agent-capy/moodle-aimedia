@@ -59,3 +59,4 @@ $string['privacy:metadata:transcript:transcript'] = 'The words the model heard i
 $string['privacy:metadata:userid'] = 'Who made the request.';
 $string['result'] = 'Answer';
 $string['result:about'] = 'From {$a->filename}, answered by {$a->model}.';
+$string['task:purgesubmitted'] = 'Remove media that was sent to an AI and never cleaned up';
