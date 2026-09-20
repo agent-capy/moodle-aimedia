@@ -56,6 +56,172 @@ class behat_tiny_aimedia extends behat_base {
     }
 
     /**
+     * Decide what the AI will answer, without there being an AI.
+     *
+     * Everything this plugin does after the answer arrives -- putting it in the alt
+     * text, making that one press of undo, leaving the editor knowing it has changed --
+     * needs an answer to arrive, and a test site has no AI to ask. So the one web
+     * service call is answered here instead.
+     *
+     * This reaches into core/ajax, which the built module calls by property rather
+     * than by a bound name, so replacing the property replaces what the module calls.
+     * If that ever stops being true these scenarios fail rather than quietly stop
+     * testing anything, which is the direction worth failing in.
+     *
+     * @Given /^the AI will answer "(?P<answer_string>(?:[^"]|\\")*)"$/
+     * @Given /^the AI will (?P<never_string>never answer)$/
+     * @param string $answer What it says, or "never answer" for a request left hanging.
+     */
+    public function the_ai_will_answer(string $answer): void {
+        $this->require_tiny_tags();
+
+        // A request that is never answered leaves the page as it looks in the middle,
+        // which is what somebody saving their work then would save.
+        $reply = $answer === 'never answer'
+            ? 'new Promise(() => {})'
+            : 'Promise.resolve({success: true, text: ' . json_encode($answer) . '})';
+
+        // require() is asynchronous. Firing it and pressing the button would race, and
+        // the race was lost every time: the real web service answered instead and the
+        // scenario tested nothing. So a flag is set once it is really in place, and
+        // the step waits for the flag.
+        // Only this plugin's calls are answered here. Everything else on the page is
+        // handed to the real one -- including core_get_string, which this very button
+        // uses, and which answering with a made up reply breaks before the button ever
+        // sends anything.
+        $this->execute_script(
+            "window.behatAimediaStubbed = false;"
+            . " window.behatAimediaCalls = [];"
+            . " require(['core/ajax'], (ajax) => {"
+            . " const real = ajax.call;"
+            . " ajax.call = (requests, ...rest) => requests.map((request) => {"
+            . " window.behatAimediaCalls.push(request.methodname);"
+            . " return request.methodname.indexOf('local_aimedia_') === 0"
+            . " ? {$reply}"
+            . " : real([request], ...rest)[0];"
+            . " });"
+            . " window.behatAimediaStubbed = true;"
+            . " });"
+        );
+
+        $this->spin(function (): bool {
+            if ($this->evaluate_script('return window.behatAimediaStubbed === true;') !== true) {
+                throw new ExpectationException('The answer is not in place yet', $this->getSession());
+            }
+
+            return true;
+        });
+    }
+
+    /**
+     * Check what is in the editor's content, which is what a save would write.
+     *
+     * Read through getContent() rather than off the DOM, because the two are not the
+     * same: an editor can be showing something it would not save, and this plugin
+     * relies on that.
+     *
+     * @Then /^the "(?P<locator_string>(?:[^"]|\\")*)" TinyMCE editor content should( not)? contain "(?P<needle_string>(?:[^"]|\\")*)"$/
+     * @param string $locator The editor.
+     * @param string $needle What to look for.
+     * @throws ExpectationException When the content does not say what it should.
+     */
+    public function the_editor_content_should_contain(string $locator, string $needle): void {
+        $this->require_tiny_tags();
+        $editorid = $this->get_textarea_for_locator($locator)->getAttribute('id');
+        $content = (string) $this->evaluate_javascript_for_editor($editorid, 'resolve(instance.getContent());');
+
+        if (!str_contains($content, $needle)) {
+            throw new ExpectationException(
+                "Expected the saved content to contain '{$needle}', found '{$content}'",
+                $this->getSession(),
+            );
+        }
+    }
+
+    /**
+     * Check the editor knows whether it has been changed.
+     *
+     * Every "you have unsaved work" prompt in Moodle reads this, so a change the
+     * editor does not know about is a change somebody loses.
+     *
+     * @Then /^the "(?P<locator_string>(?:[^"]|\\")*)" TinyMCE editor should be marked as changed$/
+     * @param string $locator The editor.
+     * @throws ExpectationException When it does not know.
+     */
+    public function the_editor_should_be_dirty(string $locator): void {
+        $this->require_tiny_tags();
+        $editorid = $this->get_textarea_for_locator($locator)->getAttribute('id');
+        $this->spin(
+            function () use ($editorid): bool {
+                $dirty = $this->evaluate_javascript_for_editor($editorid, 'resolve(instance.isDirty() ? 1 : 0);');
+                if ((int) $dirty !== 1) {
+                    throw new ExpectationException(
+                        'The editor does not know it has been changed',
+                        $this->getSession(),
+                    );
+                }
+
+                return true;
+            },
+        );
+    }
+
+    /**
+     * Press undo once, as somebody does when they do not like the answer.
+     *
+     * @When /^I undo once in the "(?P<locator_string>(?:[^"]|\\")*)" TinyMCE editor$/
+     * @param string $locator The editor.
+     */
+    public function i_undo_once(string $locator): void {
+        $this->require_tiny_tags();
+        $editorid = $this->get_textarea_for_locator($locator)->getAttribute('id');
+        $this->execute_javascript_for_editor($editorid, 'instance.undoManager.undo();');
+    }
+
+    /**
+     * Check the alt text of the picture, which is what the button writes.
+     *
+     * @Then /^the picture in the "(?P<locator_string>(?:[^"]|\\")*)" TinyMCE editor should be described as "(?P<alt_string>(?:[^"]|\\")*)"$/
+     * @param string $locator The editor holding it.
+     * @param string $alt What the alt text should say. "nothing" for an empty one.
+     * @throws ExpectationException When it says something else.
+     */
+    public function the_picture_should_be_described_as(string $locator, string $alt): void {
+        $this->require_tiny_tags();
+        $editorid = $this->get_textarea_for_locator($locator)->getAttribute('id');
+        $expected = $alt === 'nothing' ? '' : $alt;
+
+        // Waited for rather than read once. The answer arrives from a web service, so
+        // a step that looked at the page the instant the button was pressed would
+        // pass whatever the code did.
+        $this->spin(
+            function () use ($editorid, $expected): bool {
+                $found = (string) $this->evaluate_javascript_for_editor($editorid, <<<'JS'
+                    const image = instance.getBody().querySelector('img');
+                    resolve(image ? (image.getAttribute('alt') ?? '') : '(no picture)');
+                JS);
+
+                if ($found !== $expected) {
+                    // What the page said as well as what the picture says. A step that
+                    // only reported the alt text sent somebody hunting through the
+                    // wrong half of this.
+                    $calls = json_encode($this->evaluate_script('return window.behatAimediaCalls || [];'));
+                    $said = trim((string) $this->evaluate_script(
+                        "return (document.querySelector('.alert, .toast-message') || {}).innerText || '';"
+                    ));
+                    throw new ExpectationException(
+                        "Expected the alt text to be '{$expected}', found '{$found}'."
+                            . " Web service calls: {$calls}. Page said: '{$said}'",
+                        $this->getSession(),
+                    );
+                }
+
+                return true;
+            },
+        );
+    }
+
+    /**
      * Paste a picture into an editor, the way somebody pastes a screenshot.
      *
      * Built as a clipboard event carrying a file, which is what the browser delivers
