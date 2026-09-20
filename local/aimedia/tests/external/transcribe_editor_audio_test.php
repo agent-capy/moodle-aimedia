@@ -127,21 +127,24 @@ final class transcribe_editor_audio_test extends \advanced_testcase {
     }
 
     public function test_being_in_a_course_is_not_being_allowed_in_it(): void {
-        // Enrolled in the second course, so they may be there, and still refused:
-        // this is the capability doing the work rather than enrolment.
-        $allowed = $this->getDataGenerator()->create_course();
-        $other = $this->getDataGenerator()->create_course();
-        $allowedcontext = \context_course::instance($allowed->id);
-        $user = $this->getDataGenerator()->create_and_enrol($allowed, 'editingteacher');
-        $this->getDataGenerator()->enrol_user($user->id, $other->id, 'editingteacher');
-        $roleid = $this->getDataGenerator()->create_role();
-        assign_capability('local/aimedia:use', CAP_ALLOW, $roleid, $allowedcontext->id);
-        role_assign($roleid, $user->id, $allowedcontext->id);
+        // Teaching one course and studying another. Enrolled in both, so they
+        // may be in both; allowed in only one, because permission follows the
+        // role they hold there. This is the capability doing the work rather
+        // than enrolment.
+        $teaching = $this->getDataGenerator()->create_course();
+        $studying = $this->getDataGenerator()->create_course();
+        $user = $this->getDataGenerator()->create_and_enrol($teaching, 'editingteacher');
+        $this->getDataGenerator()->enrol_user($user->id, $studying->id, 'student');
 
         $this->setUser($user);
         $url = $this->recording((int) $user->id);
 
+        // Allowed where they teach.
+        $result = transcribe_editor_audio::execute(\context_course::instance($teaching->id)->id, $url);
+        $this->assertSame(get_string('error:noprovider', 'local_aimedia'), $result['error']);
+
+        // Refused where they study.
         $this->expectException(\required_capability_exception::class);
-        transcribe_editor_audio::execute(\context_course::instance($other->id)->id, $url);
+        transcribe_editor_audio::execute(\context_course::instance($studying->id)->id, $url);
     }
 }

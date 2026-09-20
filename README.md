@@ -96,6 +96,22 @@ takes `?contextid=`, and the request is made in that course.
 is assigned in a course — a teacher's role is. Declared at site level it could
 only be given to a role assigned site-wide, which means giving it to everybody.
 
+### Who may use it
+
+| Role | Out of the box |
+| --- | --- |
+| Manager, teacher, non-editing teacher | ✅ **Allowed**, as with the AI placements Moodle ships |
+| Student | Not allowed |
+| Anybody else | Not allowed |
+
+Students are left out rather than refused on principle: a picture or a recording
+is somebody's face or voice, and each request costs the site money, so letting a
+whole cohort send them is a decision for the site. One tick adds them.
+
+⚠ Moodle applies the defaults in `db/access.php` only when a capability is first
+installed. A site that already had this one gets them from an upgrade step
+instead, which **leaves alone any role somebody has already decided about**.
+
 It exists because the editor buttons only reach what is in an editor, and because
 it is the smallest thing that exercises the whole chain. The file is deleted from
 the site once the answer comes back.
