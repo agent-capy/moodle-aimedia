@@ -116,6 +116,12 @@ whole cohort send them is a decision for the site. One tick adds them.
 installed. A site that already had this one gets them from an upgrade step
 instead, which **leaves alone any role somebody has already decided about**.
 
+⭐ The editor buttons ask for this capability **in the context the editor is
+being drawn in**, which is the context the request is then made in and the one
+the web service checks. Asking anywhere else would answer about somebody else:
+the capability is given to teachers, and a teacher holds it in their course
+rather than across the site.
+
 It exists because the editor buttons only reach what is in an editor, and because
 it is the smallest thing that exercises the whole chain. The file is deleted from
 the site once the answer comes back.

@@ -48,7 +48,13 @@ class plugininfo extends plugin implements
             return false;
         }
 
-        return has_capability('local/aimedia:use', \context_system::instance());
+        // Asked in the context the editor is being drawn in, which is the context the
+        // request will be made in and the one the external functions check. The
+        // capability is declared at course level and given to teachers, so asking at
+        // the site instead answered for almost nobody: a teacher has it in their
+        // course and not across the site, and the buttons never appeared for the
+        // people the feature is for.
+        return has_capability('local/aimedia:use', $context);
     }
 
     #[\Override]
