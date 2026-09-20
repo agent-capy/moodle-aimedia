@@ -172,6 +172,27 @@ final class editor_file_test extends \advanced_testcase {
         ));
     }
 
+    public function test_the_cache_buster_the_editor_adds_is_not_part_of_the_filename(): void {
+        global $CFG;
+
+        $user = $this->getDataGenerator()->create_user();
+        $this->setUser($user);
+        $this->draft_url((int) $user->id);
+        $contextid = \context_user::instance((int) $user->id)->id;
+
+        // What the editor really shows after somebody pastes a picture. TinyMCE
+        // uploads it into the draft area and then appends a timestamp so the browser
+        // does not serve the previous picture of the same name from its cache. The
+        // address is a draft file's; the question mark is not part of what the file
+        // is called.
+        $file = editor_file::resolve(
+            $CFG->wwwroot . '/draftfile.php/' . $contextid . '/user/draft/42/diagram.png?1789917195369',
+        );
+
+        $this->assertNotNull($file);
+        $this->assertSame('diagram.png', $file->get_filename());
+    }
+
     public function test_anything_that_is_not_a_draft_url_is_refused(): void {
         global $CFG;
 

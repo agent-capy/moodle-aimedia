@@ -87,7 +87,14 @@ class editor_file {
 
         $base = $CFG->wwwroot . '/draftfile.php';
         if (str_starts_with($url, $base . '/')) {
-            return urldecode(substr($url, strlen($base) + 1));
+            // Everything after the question mark belongs to the browser, not to the
+            // file. TinyMCE appends a timestamp to a picture it has just uploaded so
+            // that the browser does not show the previous picture of the same name
+            // from its cache, and reading that as part of the name was why a pasted
+            // picture came back as one that had not just been added.
+            $path = strtok(substr($url, strlen($base) + 1), '?#');
+
+            return $path === false ? null : urldecode($path);
         }
         if (!str_starts_with($url, $base . '?')) {
             return null;
