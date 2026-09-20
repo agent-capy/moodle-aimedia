@@ -20,14 +20,18 @@ use core_external\external_api;
 use core_external\external_function_parameters;
 use core_external\external_single_structure;
 use core_external\external_value;
-use local_aimedia\aiactions\describe_image;
+use local_aimedia\aiactions\transcript_audio;
 use local_aimedia\editor_file;
 use local_aimedia\media_request;
 
 /**
- * Ask about a picture the user has just put in an editor.
+ * Turn a recording the user has just made in an editor into words.
  *
- * The picture arrives as the URL the editor is showing. Deciding whether the
+ * Moodle can already record straight into the editor, and what it leaves behind
+ * is a player nobody can search, quote or read. This is the other half: the same
+ * recording, as text, next to it.
+ *
+ * The recording arrives as the URL the editor is showing. Deciding whether the
  * caller may send it is the whole of editor_file, which this trusts and does
  * not repeat.
  *
@@ -35,7 +39,7 @@ use local_aimedia\media_request;
  * @copyright  2026 UDAGAWA Mitsuru
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
-class describe_editor_image extends external_api {
+class transcribe_editor_audio extends external_api {
     /**
      * Parameters.
      *
@@ -43,44 +47,40 @@ class describe_editor_image extends external_api {
      */
     public static function execute_parameters(): external_function_parameters {
         return new external_function_parameters([
-            'imageurl' => new external_value(PARAM_URL, 'The src of the image in the editor'),
-            'question' => new external_value(PARAM_TEXT, 'What to ask about it', VALUE_DEFAULT, ''),
+            'audiourl' => new external_value(PARAM_URL, 'The src of the recording in the editor'),
         ]);
     }
 
     /**
-     * Ask about the picture.
+     * Transcribe the recording.
      *
-     * @param string $imageurl The src of the image in the editor.
-     * @param string $question What to ask about it.
-     * @return array The answer, or why there is not one.
+     * @param string $audiourl The src of the recording in the editor.
+     * @return array The words, or why there are not any.
      */
-    public static function execute(string $imageurl, string $question = ''): array {
+    public static function execute(string $audiourl): array {
         global $USER;
 
         [
-            'imageurl' => $imageurl,
-            'question' => $question,
+            'audiourl' => $audiourl,
         ] = self::validate_parameters(self::execute_parameters(), [
-            'imageurl' => $imageurl,
-            'question' => $question,
+            'audiourl' => $audiourl,
         ]);
 
         $context = \context_user::instance($USER->id);
         self::validate_context($context);
         require_capability('local/aimedia:use', \context_system::instance());
 
-        $file = editor_file::resolve($imageurl);
+        $file = editor_file::resolve($audiourl);
         if ($file === null) {
             return [
                 'success' => false,
                 'text' => '',
-                'error' => get_string('error:notadraftimage', 'local_aimedia'),
+                'error' => get_string('error:notadraftaudio', 'local_aimedia'),
             ];
         }
 
         $manager = \core\di::get(\core_ai\manager::class);
-        if (!$manager->get_providers_for_actions([describe_image::class], true)[describe_image::class]) {
+        if (!$manager->get_providers_for_actions([transcript_audio::class], true)[transcript_audio::class]) {
             return [
                 'success' => false,
                 'text' => '',
@@ -89,17 +89,16 @@ class describe_editor_image extends external_api {
         }
 
         $response = $manager->process_action(media_request::make(
-            class: describe_image::class,
+            class: transcript_audio::class,
             contextid: $context->id,
             userid: (int) $USER->id,
             file: $file,
-            question: trim($question),
         ));
 
         return [
             'success' => $response->get_success(),
             'text' => $response->get_success()
-                ? (string) ($response->get_response_data()['generatedcontent'] ?? '')
+                ? (string) ($response->get_response_data()['transcript'] ?? '')
                 : '',
             'error' => $response->get_success() ? '' : $response->get_errormessage(),
         ];
@@ -112,9 +111,9 @@ class describe_editor_image extends external_api {
      */
     public static function execute_returns(): external_single_structure {
         return new external_single_structure([
-            'success' => new external_value(PARAM_BOOL, 'Whether there is an answer'),
-            'text' => new external_value(PARAM_RAW, 'The answer'),
-            'error' => new external_value(PARAM_TEXT, 'Why there is no answer'),
+            'success' => new external_value(PARAM_BOOL, 'Whether there is a transcript'),
+            'text' => new external_value(PARAM_RAW, 'The words heard in the recording'),
+            'error' => new external_value(PARAM_TEXT, 'Why there is no transcript'),
         ]);
     }
 }

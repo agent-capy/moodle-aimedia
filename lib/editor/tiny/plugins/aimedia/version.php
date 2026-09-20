@@ -25,7 +25,7 @@
 defined('MOODLE_INTERNAL') || die();
 
 $plugin->component = 'tiny_aimedia';
-$plugin->version = 2026092000;
+$plugin->version = 2026092001;
 $plugin->requires = 2025041400; // Moodle 5.0.0 or later.
 $plugin->dependencies = ['local_aimedia' => ANY_VERSION];
 $plugin->maturity = MATURITY_ALPHA;

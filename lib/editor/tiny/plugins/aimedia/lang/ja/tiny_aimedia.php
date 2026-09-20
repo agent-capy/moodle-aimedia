@@ -25,9 +25,12 @@
 defined('MOODLE_INTERNAL') || die();
 
 $string['describe'] = 'この画像を説明する';
-$string['done'] = '説明をこの画像の代替テキストに入れました。違っていれば直してください。';
+$string['done:describe'] = '説明をこの画像の代替テキストに入れました。違っていれば直してください。';
+$string['done:transcribe'] = '文字起こしを録音の後ろに入れました。聞き取ったのは機械なので、目を通して直してください。';
+$string['error:noaudio'] = '先に録音を選択してください。';
 $string['error:noimage'] = '先に画像を選択してください。';
 $string['pluginname'] = 'AI メディア';
 $string['privacy:metadata'] = 'AI メディアのエディタボタンは個人データを保存しません。送信するものは AI メディアアクションプラグインが宣言しています。';
 $string['prompt'] = 'この画像の代替テキストを書いてください。1文で、平易に、目で見られない人が知る必要のあることを述べてください。「〜の画像」で始めないでください。';
+$string['transcribe'] = 'この録音を文字起こしする';
 $string['working'] = '問い合わせ中…';

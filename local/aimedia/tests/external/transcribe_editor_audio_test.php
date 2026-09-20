@@ -17,18 +17,18 @@
 namespace local_aimedia\external;
 
 /**
- * Tests for asking about a picture in the editor.
+ * Tests for transcribing a recording made in the editor.
  *
- * Whose draft the picture is comes from editor_file and is tested there. What
- * is tested here is the rest: who may ask, and what the caller is told when no
- * provider on the site can look at a picture.
+ * What is tested here is everything that happens before a provider is asked:
+ * who may ask, whose recording it is, and what the caller is told when there is
+ * nothing on the site that can listen to it.
  *
  * @package    local_aimedia
  * @copyright  2026 UDAGAWA Mitsuru
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
-#[\PHPUnit\Framework\Attributes\CoversClass(describe_editor_image::class)]
-final class describe_editor_image_test extends \advanced_testcase {
+#[\PHPUnit\Framework\Attributes\CoversClass(transcribe_editor_audio::class)]
+final class transcribe_editor_audio_test extends \advanced_testcase {
     #[\Override]
     public function setUp(): void {
         parent::setUp();
@@ -36,12 +36,12 @@ final class describe_editor_image_test extends \advanced_testcase {
     }
 
     /**
-     * Put a picture in somebody's draft area and return the URL the editor shows.
+     * Put a recording in somebody's draft area and return the URL the editor shows.
      *
      * @param int $userid Whose draft area.
      * @return string The URL.
      */
-    protected function picture(int $userid): string {
+    protected function recording(int $userid): string {
         global $CFG;
 
         $contextid = \context_user::instance($userid)->id;
@@ -51,27 +51,29 @@ final class describe_editor_image_test extends \advanced_testcase {
             'filearea' => 'draft',
             'itemid' => 7,
             'filepath' => '/',
-            'filename' => 'diagram.png',
-        ], 'pretend this is a picture');
+            'filename' => 'recording-audio.ogg',
+        ], 'pretend this is a recording');
 
-        return $CFG->wwwroot . '/draftfile.php/' . $contextid . '/user/draft/7/diagram.png';
+        return $CFG->wwwroot . '/draftfile.php/' . $contextid . '/user/draft/7/recording-audio.ogg';
     }
 
-    public function test_somebody_elses_picture_is_refused(): void {
+    public function test_somebody_elses_recording_is_refused(): void {
         $owner = $this->getDataGenerator()->create_user();
-        $url = $this->picture((int) $owner->id);
+        $url = $this->recording((int) $owner->id);
 
         $this->setAdminUser();
-        $result = describe_editor_image::execute($url);
+        $result = transcribe_editor_audio::execute($url);
 
         $this->assertFalse($result['success']);
         $this->assertSame('', $result['text']);
-        $this->assertSame(get_string('error:notadraftimage', 'local_aimedia'), $result['error']);
+        $this->assertSame(get_string('error:notadraftaudio', 'local_aimedia'), $result['error']);
     }
 
-    public function test_a_site_that_cannot_look_says_so_rather_than_failing(): void {
+    public function test_a_site_that_cannot_listen_says_so_rather_than_failing(): void {
+        // No AI provider is installed in a test site, so this is the honest answer
+        // and it has to arrive as an answer, not as an exception in the editor.
         $this->setAdminUser();
-        $result = describe_editor_image::execute($this->picture((int) get_admin()->id));
+        $result = transcribe_editor_audio::execute($this->recording((int) get_admin()->id));
 
         $this->assertFalse($result['success']);
         $this->assertSame(get_string('error:noprovider', 'local_aimedia'), $result['error']);
@@ -80,9 +82,9 @@ final class describe_editor_image_test extends \advanced_testcase {
     public function test_the_capability_is_what_allows_it(): void {
         $user = $this->getDataGenerator()->create_user();
         $this->setUser($user);
-        $url = $this->picture((int) $user->id);
+        $url = $this->recording((int) $user->id);
 
         $this->expectException(\required_capability_exception::class);
-        describe_editor_image::execute($url);
+        transcribe_editor_audio::execute($url);
     }
 }

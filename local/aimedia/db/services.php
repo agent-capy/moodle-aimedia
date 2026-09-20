@@ -32,4 +32,11 @@ $functions = [
         'ajax' => true,
         'capabilities' => 'local/aimedia:use',
     ],
+    'local_aimedia_transcribe_editor_audio' => [
+        'classname' => 'local_aimedia\external\transcribe_editor_audio',
+        'description' => 'Turn a recording in the editor into text.',
+        'type' => 'read',
+        'ajax' => true,
+        'capabilities' => 'local/aimedia:use',
+    ],
 ];

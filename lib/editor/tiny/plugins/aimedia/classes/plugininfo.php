@@ -24,7 +24,7 @@ use editor_tiny\plugin_with_configuration;
 use editor_tiny\plugin_with_menuitems;
 
 /**
- * Describe a picture, from inside the editor.
+ * Describe a picture or transcribe a recording, from inside the editor.
  *
  * @package    tiny_aimedia
  * @copyright  2026 UDAGAWA Mitsuru
@@ -41,9 +41,10 @@ class plugininfo extends plugin implements
         array $fpoptions,
         ?editor $editor = null,
     ): bool {
-        // Nothing to describe where files cannot be added, and nothing to ask
-        // where the person may not ask.
-        if (empty($fpoptions['image'])) {
+        // Both buttons work on a file the person has just put in this editor,
+        // so an editor that cannot hold files has nothing for them to work on.
+        // This is the same test Moodle's own recorder makes.
+        if (empty($options['maxfiles'])) {
             return false;
         }
 
@@ -52,12 +53,18 @@ class plugininfo extends plugin implements
 
     #[\Override]
     public static function get_available_buttons(): array {
-        return ['tiny_aimedia/tiny_aimedia_describe'];
+        return [
+            'tiny_aimedia/tiny_aimedia_describe',
+            'tiny_aimedia/tiny_aimedia_transcribe',
+        ];
     }
 
     #[\Override]
     public static function get_available_menuitems(): array {
-        return ['tiny_aimedia/tiny_aimedia_describe'];
+        return [
+            'tiny_aimedia/tiny_aimedia_describe',
+            'tiny_aimedia/tiny_aimedia_transcribe',
+        ];
     }
 
     #[\Override]

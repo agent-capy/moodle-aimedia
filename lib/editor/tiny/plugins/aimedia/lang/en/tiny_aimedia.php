@@ -25,9 +25,12 @@
 defined('MOODLE_INTERNAL') || die();
 
 $string['describe'] = 'Describe this image';
-$string['done'] = 'The description is now this image\'s alt text. Edit it if it is not quite right.';
+$string['done:describe'] = 'The description is now this image\'s alt text. Edit it if it is not quite right.';
+$string['done:transcribe'] = 'The words are now in the page, after the recording. Read them over: a machine heard them, not a person.';
+$string['error:noaudio'] = 'Select a recording first.';
 $string['error:noimage'] = 'Select an image first.';
 $string['pluginname'] = 'AI media';
 $string['privacy:metadata'] = 'The AI media editor button stores no personal data. What it sends is declared by the AI media actions plugin.';
 $string['prompt'] = 'Write alt text for this image: one sentence, plain, describing what a reader who cannot see it needs to know. Do not begin with \"an image of\".';
+$string['transcribe'] = 'Transcribe this recording';
 $string['working'] = 'Asking…';
