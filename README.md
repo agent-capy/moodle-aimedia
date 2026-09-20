@@ -36,6 +36,25 @@ instead of calling it.
 **Until that changes, stop this action with a routing rule rather than with the
 switch.** This has been written up for core.
 
+## The page
+
+`/local/aimedia/index.php` — upload a recording to have it transcribed, or a
+picture to ask a question about it. Granted by `local/aimedia:use`, which nobody
+has until it is given: sending a recording or a picture to an AI costs the site
+money and sends somebody's voice or face outside it.
+
+It is a page rather than a placement because Moodle's placements put AI into text
+somebody is already editing, and there is nowhere in Moodle that a person hands
+over a file and expects words back. It is the smallest thing that exercises the
+whole chain, and the file is deleted from the site once the answer comes back.
+
+⚠ The site's AI usage policy is shown and has to be accepted first, the same way
+the placements Moodle ships require it.
+
+⚠ Only actions some enabled provider can carry out are offered. An action nothing
+can perform would be an option that fails after the upload, which is the worst
+moment to find out.
+
 ## What is stored
 
 `local_aimedia_transcript`: the transcript, the recording's content hash, its

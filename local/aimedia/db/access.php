@@ -15,7 +15,7 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * Version details for local_aimedia.
+ * Capabilities for local_aimedia.
  *
  * @package    local_aimedia
  * @copyright  2026 UDAGAWA Mitsuru
@@ -24,8 +24,13 @@
 
 defined('MOODLE_INTERNAL') || die();
 
-$plugin->component = 'local_aimedia';
-$plugin->version = 2026092002;
-$plugin->requires = 2025041400; // Moodle 5.0.0 or later.
-$plugin->maturity = MATURITY_ALPHA;
-$plugin->release = '0.1.0-dev';
+$capabilities = [
+    // Sending a recording or a picture to an AI costs the site money and sends
+    // somebody's voice or face outside it, so nobody has this until it is given.
+    'local/aimedia:use' => [
+        'riskbitmask' => RISK_PERSONAL | RISK_SPAM,
+        'captype' => 'write',
+        'contextlevel' => CONTEXT_SYSTEM,
+        'archetypes' => [],
+    ],
+];

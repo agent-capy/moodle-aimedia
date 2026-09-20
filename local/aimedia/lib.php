@@ -15,17 +15,32 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * Version details for local_aimedia.
+ * Library functions for local_aimedia.
  *
  * @package    local_aimedia
  * @copyright  2026 UDAGAWA Mitsuru
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
-defined('MOODLE_INTERNAL') || die();
+/**
+ * Put the page somewhere it can be found.
+ *
+ * A page nobody can reach without knowing its address is a page nobody uses, so
+ * it goes in the site navigation for the people allowed to use it.
+ *
+ * @param global_navigation $navigation The navigation tree.
+ */
+function local_aimedia_extend_navigation(global_navigation $navigation): void {
+    if (!has_capability('local/aimedia:use', context_system::instance())) {
+        return;
+    }
 
-$plugin->component = 'local_aimedia';
-$plugin->version = 2026092002;
-$plugin->requires = 2025041400; // Moodle 5.0.0 or later.
-$plugin->maturity = MATURITY_ALPHA;
-$plugin->release = '0.1.0-dev';
+    $navigation->add(
+        get_string('pluginname', 'local_aimedia'),
+        new moodle_url('/local/aimedia/index.php'),
+        navigation_node::TYPE_CUSTOM,
+        null,
+        'local_aimedia',
+        new pix_icon('i/ai', ''),
+    );
+}
