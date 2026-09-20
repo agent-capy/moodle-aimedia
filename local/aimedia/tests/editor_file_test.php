@@ -117,6 +117,61 @@ final class editor_file_test extends \advanced_testcase {
         $this->assertNull(editor_file::resolve($url));
     }
 
+    public function test_the_same_file_is_found_when_the_site_turns_slash_arguments_off(): void {
+        global $CFG;
+
+        $user = $this->getDataGenerator()->create_user();
+        $this->setUser($user);
+        $this->draft_url((int) $user->id);
+
+        // The setting exists for servers that cannot pass PATH_INFO, and core then
+        // writes every file URL with the path in a parameter instead. It is the same
+        // file and the same editor; accepting only one shape made the buttons do
+        // nothing on those sites.
+        $CFG->slasharguments = 0;
+        $url = \moodle_url::make_draftfile_url(42, '/', 'diagram.png')->out(false);
+        $this->assertStringContainsString('?file=', $url);
+
+        $file = editor_file::resolve($url);
+
+        $this->assertNotNull($file);
+        $this->assertSame('diagram.png', $file->get_filename());
+    }
+
+    public function test_a_subfolder_survives_the_parameter_form_too(): void {
+        global $CFG;
+
+        $user = $this->getDataGenerator()->create_user();
+        $this->setUser($user);
+        $this->draft_url((int) $user->id, 'shot.png', '/screens/');
+
+        $CFG->slasharguments = 0;
+        $file = editor_file::resolve(
+            \moodle_url::make_draftfile_url(42, '/screens/', 'shot.png')->out(false),
+        );
+
+        $this->assertNotNull($file);
+        $this->assertSame('/screens/', $file->get_filepath());
+    }
+
+    public function test_somebody_elses_draft_is_refused_in_the_parameter_form_as_well(): void {
+        global $CFG;
+
+        $owner = $this->getDataGenerator()->create_user();
+        $other = $this->getDataGenerator()->create_user();
+        $this->setUser($owner);
+        $this->draft_url((int) $owner->id);
+        $ownercontext = (int) \context_user::instance((int) $owner->id)->id;
+
+        $this->setUser($other);
+        $CFG->slasharguments = 0;
+
+        // The shape of the URL must not become a way round whose draft area it names.
+        $this->assertNull(editor_file::resolve(
+            $CFG->wwwroot . '/draftfile.php?file=' . rawurlencode("/{$ownercontext}/user/draft/42/diagram.png"),
+        ));
+    }
+
     public function test_anything_that_is_not_a_draft_url_is_refused(): void {
         global $CFG;
 

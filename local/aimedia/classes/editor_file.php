@@ -40,14 +40,14 @@ class editor_file {
      * @return \stored_file|null The file, or null when the URL is not one of these.
      */
     public static function resolve(string $url): ?\stored_file {
-        global $CFG, $USER;
+        global $USER;
 
-        $prefix = $CFG->wwwroot . '/draftfile.php/';
-        if (!str_starts_with($url, $prefix)) {
+        $path = self::path_of($url);
+        if ($path === null) {
             return null;
         }
 
-        $parts = explode('/', urldecode(substr($url, strlen($prefix))));
+        $parts = explode('/', $path);
         // The shape is contextid / user / draft / itemid / [path...] / filename.
         if (count($parts) < 5 || $parts[1] !== 'user' || $parts[2] !== 'draft') {
             return null;
@@ -67,5 +67,36 @@ class editor_file {
         $file = get_file_storage()->get_file($contextid, 'user', 'draft', $itemid, $filepath, $filename);
 
         return $file === false || $file->is_directory() ? null : $file;
+    }
+
+    /**
+     * The part of a draft file URL that names the file, whichever shape the URL is in.
+     *
+     * Moodle writes file URLs two ways and the site decides which. With slash arguments
+     * on, which is the default, the path follows the script name. With them off -- the
+     * setting exists for servers that cannot pass PATH_INFO -- core puts the same path
+     * in a "file" parameter instead. Both are produced by moodle_url::make_file_url(),
+     * so a picture somebody has just uploaded takes whichever form their site uses, and
+     * accepting only one of them meant the buttons did nothing on the other.
+     *
+     * @param string $url The src the editor is showing.
+     * @return string|null The path inside draftfile.php, or null when it is not one.
+     */
+    protected static function path_of(string $url): ?string {
+        global $CFG;
+
+        $base = $CFG->wwwroot . '/draftfile.php';
+        if (str_starts_with($url, $base . '/')) {
+            return urldecode(substr($url, strlen($base) + 1));
+        }
+        if (!str_starts_with($url, $base . '?')) {
+            return null;
+        }
+
+        parse_str(substr($url, strlen($base) + 1), $params);
+        $path = (string) ($params['file'] ?? '');
+
+        // The parameter carries the same path, leading slash and all.
+        return $path === '' ? null : ltrim($path, '/');
     }
 }
