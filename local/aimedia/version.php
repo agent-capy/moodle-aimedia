@@ -25,7 +25,7 @@
 defined('MOODLE_INTERNAL') || die();
 
 $plugin->component = 'local_aimedia';
-$plugin->version = 2026092004;
+$plugin->version = 2026092005;
 $plugin->requires = 2025041400; // Moodle 5.0.0 or later.
 $plugin->maturity = MATURITY_ALPHA;
 $plugin->release = '0.1.0-dev';

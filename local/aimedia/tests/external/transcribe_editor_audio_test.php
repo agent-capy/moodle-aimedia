@@ -62,7 +62,7 @@ final class transcribe_editor_audio_test extends \advanced_testcase {
         $url = $this->recording((int) $owner->id);
 
         $this->setAdminUser();
-        $result = transcribe_editor_audio::execute($url);
+        $result = transcribe_editor_audio::execute(0, $url);
 
         $this->assertFalse($result['success']);
         $this->assertSame('', $result['text']);
@@ -73,7 +73,7 @@ final class transcribe_editor_audio_test extends \advanced_testcase {
         // No AI provider is installed in a test site, so this is the honest answer
         // and it has to arrive as an answer, not as an exception in the editor.
         $this->setAdminUser();
-        $result = transcribe_editor_audio::execute($this->recording((int) get_admin()->id));
+        $result = transcribe_editor_audio::execute(0, $this->recording((int) get_admin()->id));
 
         $this->assertFalse($result['success']);
         $this->assertSame(get_string('error:noprovider', 'local_aimedia'), $result['error']);
@@ -85,6 +85,63 @@ final class transcribe_editor_audio_test extends \advanced_testcase {
         $url = $this->recording((int) $user->id);
 
         $this->expectException(\required_capability_exception::class);
-        transcribe_editor_audio::execute($url);
+        transcribe_editor_audio::execute(0, $url);
+    }
+
+    public function test_a_teacher_may_ask_from_their_own_course(): void {
+        // The case this is for: somebody writing course content, whose permission
+        // comes from the course they are teaching and from nowhere else.
+        $course = $this->getDataGenerator()->create_course();
+        $context = \context_course::instance($course->id);
+        $teacher = $this->getDataGenerator()->create_and_enrol($course, 'editingteacher');
+        $roleid = $this->getDataGenerator()->create_role();
+        assign_capability('local/aimedia:use', CAP_ALLOW, $roleid, $context->id);
+        role_assign($roleid, $teacher->id, $context->id);
+
+        $this->setUser($teacher);
+        $result = transcribe_editor_audio::execute($context->id, $this->recording((int) $teacher->id));
+
+        // Allowed through: the answer is about the site, not about permission.
+        $this->assertFalse($result['success']);
+        $this->assertSame(get_string('error:noprovider', 'local_aimedia'), $result['error']);
+    }
+
+    public function test_a_course_the_caller_has_no_say_in_is_refused(): void {
+        // Permission is per course, so being allowed in one is not being allowed
+        // in the next one along. Naming a course they are not in is refused
+        // before the capability is even reached, because validate_context()
+        // asks whether they may be there at all.
+        $allowed = $this->getDataGenerator()->create_course();
+        $other = $this->getDataGenerator()->create_course();
+        $allowedcontext = \context_course::instance($allowed->id);
+        $user = $this->getDataGenerator()->create_and_enrol($allowed, 'editingteacher');
+        $roleid = $this->getDataGenerator()->create_role();
+        assign_capability('local/aimedia:use', CAP_ALLOW, $roleid, $allowedcontext->id);
+        role_assign($roleid, $user->id, $allowedcontext->id);
+
+        $this->setUser($user);
+        $url = $this->recording((int) $user->id);
+
+        $this->expectException(\moodle_exception::class);
+        transcribe_editor_audio::execute(\context_course::instance($other->id)->id, $url);
+    }
+
+    public function test_being_in_a_course_is_not_being_allowed_in_it(): void {
+        // Enrolled in the second course, so they may be there, and still refused:
+        // this is the capability doing the work rather than enrolment.
+        $allowed = $this->getDataGenerator()->create_course();
+        $other = $this->getDataGenerator()->create_course();
+        $allowedcontext = \context_course::instance($allowed->id);
+        $user = $this->getDataGenerator()->create_and_enrol($allowed, 'editingteacher');
+        $this->getDataGenerator()->enrol_user($user->id, $other->id, 'editingteacher');
+        $roleid = $this->getDataGenerator()->create_role();
+        assign_capability('local/aimedia:use', CAP_ALLOW, $roleid, $allowedcontext->id);
+        role_assign($roleid, $user->id, $allowedcontext->id);
+
+        $this->setUser($user);
+        $url = $this->recording((int) $user->id);
+
+        $this->expectException(\required_capability_exception::class);
+        transcribe_editor_audio::execute(\context_course::instance($other->id)->id, $url);
     }
 }

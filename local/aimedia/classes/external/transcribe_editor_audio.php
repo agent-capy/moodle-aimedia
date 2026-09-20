@@ -47,6 +47,7 @@ class transcribe_editor_audio extends external_api {
      */
     public static function execute_parameters(): external_function_parameters {
         return new external_function_parameters([
+            'contextid' => new external_value(PARAM_INT, 'Where the request is being made from, or 0 for nowhere in particular'),
             'audiourl' => new external_value(PARAM_URL, 'The src of the recording in the editor'),
         ]);
     }
@@ -54,21 +55,31 @@ class transcribe_editor_audio extends external_api {
     /**
      * Transcribe the recording.
      *
+     * @param int $contextid Where the request is being made from.
      * @param string $audiourl The src of the recording in the editor.
      * @return array The words, or why there are not any.
      */
-    public static function execute(string $audiourl): array {
+    public static function execute(int $contextid, string $audiourl): array {
         global $USER;
 
         [
+            'contextid' => $contextid,
             'audiourl' => $audiourl,
         ] = self::validate_parameters(self::execute_parameters(), [
+            'contextid' => $contextid,
             'audiourl' => $audiourl,
         ]);
 
-        $context = \context_user::instance($USER->id);
+        // Where the request is being made from, which the caller has to be
+        // allowed to use. A teacher's permission comes from their course, and
+        // routing rules and usage reports work on where a request came from,
+        // so a request that says nowhere would match nothing and be reported
+        // against nothing.
+        $context = $contextid > 0
+            ? \context::instance_by_id($contextid, MUST_EXIST)
+            : \context_user::instance($USER->id);
         self::validate_context($context);
-        require_capability('local/aimedia:use', \context_system::instance());
+        require_capability('local/aimedia:use', $context);
 
         $file = editor_file::resolve($audiourl);
         if ($file === null) {

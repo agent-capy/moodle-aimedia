@@ -37,6 +37,9 @@ class media_form extends \moodleform {
         $mform = $this->_form;
         $available = $this->_customdata['actions'] ?? [];
 
+        $mform->addElement('hidden', 'contextid', $this->_customdata['contextid'] ?? 0);
+        $mform->setType('contextid', PARAM_INT);
+
         $mform->addElement(
             'select',
             'action',

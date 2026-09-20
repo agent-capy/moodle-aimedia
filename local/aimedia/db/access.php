@@ -27,10 +27,14 @@ defined('MOODLE_INTERNAL') || die();
 $capabilities = [
     // Sending a recording or a picture to an AI costs the site money and sends
     // somebody's voice or face outside it, so nobody has this until it is given.
+    //
+    // Declared at course level so that it can be given to a role that is assigned
+    // in a course, which is where teachers are. Declared at site level it could
+    // only be given to a role assigned site-wide, which means everybody.
     'local/aimedia:use' => [
         'riskbitmask' => RISK_PERSONAL | RISK_SPAM,
         'captype' => 'write',
-        'contextlevel' => CONTEXT_SYSTEM,
+        'contextlevel' => CONTEXT_COURSE,
         'archetypes' => [],
     ],
 ];

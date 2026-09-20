@@ -76,12 +76,25 @@ you may send it is that component's judgement, not this plugin's.
 The buttons are offered only in editors that can hold files, and only to people
 with `local/aimedia:use`.
 
+⭐ **Each request carries the context the editor is in.** That is what makes a
+routing rule about a course apply to it, and what puts it in that course's usage
+report. A request that said nothing about where it came from would match no rule
+and be reported against nothing.
+
 ## The page
 
 `/local/aimedia/index.php` — upload a recording to have it transcribed, or a
 picture to ask a question about it. Granted by `local/aimedia:use`, which nobody
 has until it is given: sending a recording or a picture to an AI costs the site
 money and sends somebody's voice or face outside it.
+
+It is reached from **the course**, where people teaching are, and from the site
+navigation for anybody allowed to use it site-wide. Opened from a course it
+takes `?contextid=`, and the request is made in that course.
+
+⭐ The capability is declared at course level, so it can be given to a role that
+is assigned in a course — a teacher's role is. Declared at site level it could
+only be given to a role assigned site-wide, which means giving it to everybody.
 
 It exists because the editor buttons only reach what is in an editor, and because
 it is the smallest thing that exercises the whole chain. The file is deleted from

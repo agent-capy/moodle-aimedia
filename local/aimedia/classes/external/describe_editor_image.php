@@ -43,6 +43,7 @@ class describe_editor_image extends external_api {
      */
     public static function execute_parameters(): external_function_parameters {
         return new external_function_parameters([
+            'contextid' => new external_value(PARAM_INT, 'Where the request is being made from, or 0 for nowhere in particular'),
             'imageurl' => new external_value(PARAM_URL, 'The src of the image in the editor'),
             'question' => new external_value(PARAM_TEXT, 'What to ask about it', VALUE_DEFAULT, ''),
         ]);
@@ -51,24 +52,34 @@ class describe_editor_image extends external_api {
     /**
      * Ask about the picture.
      *
+     * @param int $contextid Where the request is being made from.
      * @param string $imageurl The src of the image in the editor.
      * @param string $question What to ask about it.
      * @return array The answer, or why there is not one.
      */
-    public static function execute(string $imageurl, string $question = ''): array {
+    public static function execute(int $contextid, string $imageurl, string $question = ''): array {
         global $USER;
 
         [
+            'contextid' => $contextid,
             'imageurl' => $imageurl,
             'question' => $question,
         ] = self::validate_parameters(self::execute_parameters(), [
+            'contextid' => $contextid,
             'imageurl' => $imageurl,
             'question' => $question,
         ]);
 
-        $context = \context_user::instance($USER->id);
+        // Where the request is being made from, which the caller has to be
+        // allowed to use. A teacher's permission comes from their course, and
+        // routing rules and usage reports work on where a request came from,
+        // so a request that says nowhere would match nothing and be reported
+        // against nothing.
+        $context = $contextid > 0
+            ? \context::instance_by_id($contextid, MUST_EXIST)
+            : \context_user::instance($USER->id);
         self::validate_context($context);
-        require_capability('local/aimedia:use', \context_system::instance());
+        require_capability('local/aimedia:use', $context);
 
         $file = editor_file::resolve($imageurl);
         if ($file === null) {

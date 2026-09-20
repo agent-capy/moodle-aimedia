@@ -36,10 +36,23 @@ require_once($CFG->libdir . '/formslib.php');
 use local_aimedia\form\media_form;
 use local_aimedia\media_request;
 
-require_login();
+// Where the request is being made from. A teacher writing course content is in
+// a course, and the request has to say so: routing rules and usage reports work
+// on where a request came from, and a request made from nowhere matches nothing.
+$contextid = optional_param('contextid', 0, PARAM_INT);
+$context = $contextid > 0 ? context::instance_by_id($contextid, MUST_EXIST) : context_system::instance();
+$coursecontext = $context->get_course_context(false);
 
-$context = context_system::instance();
+if ($coursecontext) {
+    require_login($coursecontext->instanceid);
+} else {
+    require_login();
+}
+
 $url = new moodle_url('/local/aimedia/index.php');
+if ($contextid > 0) {
+    $url->param('contextid', $contextid);
+}
 
 require_capability('local/aimedia:use', $context);
 
@@ -61,7 +74,7 @@ if (!$accepted && optional_param('acceptpolicy', 0, PARAM_BOOL) && confirm_sessk
     redirect($url);
 }
 
-$form = new media_form($url->out(false), ['actions' => $actions]);
+$form = new media_form($url->out(false), ['actions' => $actions, 'contextid' => $contextid]);
 $result = null;
 $failure = null;
 

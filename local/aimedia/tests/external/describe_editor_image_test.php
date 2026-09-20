@@ -62,7 +62,7 @@ final class describe_editor_image_test extends \advanced_testcase {
         $url = $this->picture((int) $owner->id);
 
         $this->setAdminUser();
-        $result = describe_editor_image::execute($url);
+        $result = describe_editor_image::execute(0, $url);
 
         $this->assertFalse($result['success']);
         $this->assertSame('', $result['text']);
@@ -71,7 +71,7 @@ final class describe_editor_image_test extends \advanced_testcase {
 
     public function test_a_site_that_cannot_look_says_so_rather_than_failing(): void {
         $this->setAdminUser();
-        $result = describe_editor_image::execute($this->picture((int) get_admin()->id));
+        $result = describe_editor_image::execute(0, $this->picture((int) get_admin()->id));
 
         $this->assertFalse($result['success']);
         $this->assertSame(get_string('error:noprovider', 'local_aimedia'), $result['error']);
@@ -83,6 +83,21 @@ final class describe_editor_image_test extends \advanced_testcase {
         $url = $this->picture((int) $user->id);
 
         $this->expectException(\required_capability_exception::class);
-        describe_editor_image::execute($url);
+        describe_editor_image::execute(0, $url);
+    }
+
+    public function test_a_teacher_may_ask_from_their_own_course(): void {
+        $course = $this->getDataGenerator()->create_course();
+        $context = \context_course::instance($course->id);
+        $teacher = $this->getDataGenerator()->create_and_enrol($course, 'editingteacher');
+        $roleid = $this->getDataGenerator()->create_role();
+        assign_capability('local/aimedia:use', CAP_ALLOW, $roleid, $context->id);
+        role_assign($roleid, $teacher->id, $context->id);
+
+        $this->setUser($teacher);
+        $result = describe_editor_image::execute($context->id, $this->picture((int) $teacher->id));
+
+        $this->assertFalse($result['success']);
+        $this->assertSame(get_string('error:noprovider', 'local_aimedia'), $result['error']);
     }
 }
