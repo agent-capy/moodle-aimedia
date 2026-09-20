@@ -27,7 +27,7 @@ use core_ai\aiactions\responses\response_base;
  * here rather than in core_ai, and providers that can transcribe declare it the
  * same way they declare core's actions.
  *
- * ⚠ Three places in core build an action's class name as 'core_ai\\aiactions\\'
+ * Three places in core build an action's class name as 'core_ai\\aiactions\\'
  * plus its basename, so an action living anywhere else is not found there. The
  * one that bites is the enable/disable switch on the provider settings screen:
  * it writes to a key nothing reads, so this action cannot be switched off from

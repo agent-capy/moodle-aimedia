@@ -26,7 +26,7 @@ use core_ai\aiactions\responses\response_base;
  * the other way, so a vision model has no action to be reached through. This is
  * that action: a picture and a question about it, answered in text.
  *
- * ⚠ Core builds an action's class name from its own namespace in three places, so
+ * Core builds an action's class name from its own namespace in three places, so
  * an action defined here is not found there. The one that shows is the enable and
  * disable switch on the provider settings screen, which writes a key nothing
  * reads. Stop this action with a routing rule instead.
