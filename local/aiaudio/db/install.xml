@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<XMLDB PATH="local/aiaudio/db" VERSION="20260920" COMMENT="XMLDB file for the local_aiaudio plugin."
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:noNamespaceSchemaLocation="../../../lib/xmldb/xmldb.xsd"
+>
+  <TABLES>
+    <TABLE NAME="local_aiaudio_transcript" COMMENT="What each transcription request produced. The recording itself is not kept here: it is identified by its content hash, so the same recording asked about twice is recognisable without this table holding a copy of somebody's voice.">
+      <FIELDS>
+        <FIELD NAME="id" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="true"/>
+        <FIELD NAME="contenthash" TYPE="char" LENGTH="40" NOTNULL="true" SEQUENCE="false" COMMENT="The content hash of the recording that was sent."/>
+        <FIELD NAME="filename" TYPE="char" LENGTH="255" NOTNULL="true" SEQUENCE="false" COMMENT="What the recording was called, so that a person can recognise their own."/>
+        <FIELD NAME="filesize" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0" SEQUENCE="false" COMMENT="How large the recording was, in bytes."/>
+        <FIELD NAME="language" TYPE="char" LENGTH="10" NOTNULL="false" SEQUENCE="false" COMMENT="The language the request named. Null where the model was left to work it out, which is not the same as an empty language."/>
+        <FIELD NAME="transcript" TYPE="text" NOTNULL="false" SEQUENCE="false" COMMENT="The text the model heard."/>
+        <FIELD NAME="durationms" TYPE="int" LENGTH="10" NOTNULL="false" SEQUENCE="false" COMMENT="How long the recording was, in milliseconds, where the provider said."/>
+        <FIELD NAME="timecreated" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0" SEQUENCE="false"/>
+      </FIELDS>
+      <KEYS>
+        <KEY NAME="primary" TYPE="primary" FIELDS="id"/>
+      </KEYS>
+      <INDEXES>
+        <INDEX NAME="contenthash" UNIQUE="false" FIELDS="contenthash"/>
+      </INDEXES>
+    </TABLE>
+  </TABLES>
+</XMLDB>
