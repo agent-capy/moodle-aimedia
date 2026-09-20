@@ -33,6 +33,7 @@ $string['action:transcript_audio:description'] = 'Turn a recording into text.';
 $string['aimedia:use'] = 'Ask an AI about a recording or a picture';
 $string['error:nofile'] = 'No file arrived. Try uploading it again.';
 $string['error:noprovider'] = 'No AI provider on this site can carry out either of these actions. An administrator has to enable one that can.';
+$string['error:notadraft'] = 'That picture is not one you have just added to this editor, so it cannot be sent. Insert or record it again and try once more.';
 $string['error:unknownaction'] = 'That is not an action this page offers.';
 $string['form:action'] = 'What to do';
 $string['form:file'] = 'Recording or picture';

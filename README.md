@@ -64,3 +64,22 @@ A transcript is the words somebody said, so the table names nobody.
 ## Licence
 
 GNU GPL v3 or later.
+
+## In the editor
+
+`tiny_aimedia` adds a **Describe this image** button to TinyMCE. Select an image
+you have just inserted or recorded, press it, and the answer becomes that image's
+**alt text**, ready to be edited.
+
+Alt text is why this is worth having in the editor. A teacher who has just dropped
+a diagram into a page knows what it shows and writes nothing, because writing it
+out is dull; the model is good at exactly that, and the person stays in charge of
+the result.
+
+⚠ **Only images you have just added.** The button sends the file behind the image,
+and only a draft file of your own can be resolved to one — a picture already saved
+into a page belongs to whichever component saved it, and whether you may send it
+is that component's judgement, not this plugin's.
+
+The button is offered only where files may be added and only to people with
+`local/aimedia:use`.

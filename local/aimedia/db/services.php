@@ -15,7 +15,7 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * Version details for local_aimedia.
+ * Web services for local_aimedia.
  *
  * @package    local_aimedia
  * @copyright  2026 UDAGAWA Mitsuru
@@ -24,8 +24,12 @@
 
 defined('MOODLE_INTERNAL') || die();
 
-$plugin->component = 'local_aimedia';
-$plugin->version = 2026092003;
-$plugin->requires = 2025041400; // Moodle 5.0.0 or later.
-$plugin->maturity = MATURITY_ALPHA;
-$plugin->release = '0.1.0-dev';
+$functions = [
+    'local_aimedia_describe_editor_image' => [
+        'classname' => 'local_aimedia\external\describe_editor_image',
+        'description' => 'Ask an AI about a picture in the editor.',
+        'type' => 'read',
+        'ajax' => true,
+        'capabilities' => 'local/aimedia:use',
+    ],
+];

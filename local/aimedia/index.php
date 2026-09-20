@@ -30,7 +30,7 @@
 
 require(__DIR__ . '/../../config.php');
 
-// moodleform is not autoloaded, so a form class extending it needs this first.
+// The moodleform class is not autoloaded, so a form extending it needs this first.
 require_once($CFG->libdir . '/formslib.php');
 
 use local_aimedia\form\media_form;

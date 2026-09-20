@@ -15,17 +15,18 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * Version details for local_aimedia.
+ * Version details for tiny_aimedia.
  *
- * @package    local_aimedia
+ * @package    tiny_aimedia
  * @copyright  2026 UDAGAWA Mitsuru
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
 defined('MOODLE_INTERNAL') || die();
 
-$plugin->component = 'local_aimedia';
-$plugin->version = 2026092003;
+$plugin->component = 'tiny_aimedia';
+$plugin->version = 2026092000;
 $plugin->requires = 2025041400; // Moodle 5.0.0 or later.
+$plugin->dependencies = ['local_aimedia' => ANY_VERSION];
 $plugin->maturity = MATURITY_ALPHA;
 $plugin->release = '0.1.0-dev';

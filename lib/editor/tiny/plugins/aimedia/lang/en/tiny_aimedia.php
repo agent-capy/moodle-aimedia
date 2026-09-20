@@ -15,17 +15,19 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * Version details for local_aimedia.
+ * Strings for component tiny_aimedia, language 'en'.
  *
- * @package    local_aimedia
+ * @package    tiny_aimedia
  * @copyright  2026 UDAGAWA Mitsuru
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
 defined('MOODLE_INTERNAL') || die();
 
-$plugin->component = 'local_aimedia';
-$plugin->version = 2026092003;
-$plugin->requires = 2025041400; // Moodle 5.0.0 or later.
-$plugin->maturity = MATURITY_ALPHA;
-$plugin->release = '0.1.0-dev';
+$string['describe'] = 'Describe this image';
+$string['done'] = 'The description is now this image\'s alt text. Edit it if it is not quite right.';
+$string['error:noimage'] = 'Select an image first.';
+$string['pluginname'] = 'AI media';
+$string['privacy:metadata'] = 'The AI media editor button stores no personal data. What it sends is declared by the AI media actions plugin.';
+$string['prompt'] = 'Write alt text for this image: one sentence, plain, describing what a reader who cannot see it needs to know. Do not begin with \"an image of\".';
+$string['working'] = 'Asking…';

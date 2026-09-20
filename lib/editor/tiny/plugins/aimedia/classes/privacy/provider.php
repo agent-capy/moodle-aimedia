@@ -14,18 +14,21 @@
 // You should have received a copy of the GNU General Public License
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
+namespace tiny_aimedia\privacy;
+
 /**
- * Version details for local_aimedia.
+ * Privacy provider for tiny_aimedia.
  *
- * @package    local_aimedia
+ * This plugin is a button. What it sends and what becomes of it is declared by
+ * local_aimedia, which does the sending.
+ *
+ * @package    tiny_aimedia
  * @copyright  2026 UDAGAWA Mitsuru
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
-
-defined('MOODLE_INTERNAL') || die();
-
-$plugin->component = 'local_aimedia';
-$plugin->version = 2026092003;
-$plugin->requires = 2025041400; // Moodle 5.0.0 or later.
-$plugin->maturity = MATURITY_ALPHA;
-$plugin->release = '0.1.0-dev';
+class provider implements \core_privacy\local\metadata\null_provider {
+    #[\Override]
+    public static function get_reason(): string {
+        return 'privacy:metadata';
+    }
+}
