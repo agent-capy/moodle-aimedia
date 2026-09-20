@@ -111,7 +111,7 @@ class describe_editor_image extends external_api {
             ];
         }
 
-        $response = $manager->process_action(media_request::make(
+        $outcome = media_request::run($manager, media_request::make(
             class: describe_image::class,
             contextid: $context->id,
             userid: (int) $USER->id,
@@ -120,11 +120,9 @@ class describe_editor_image extends external_api {
         ));
 
         return [
-            'success' => $response->get_success(),
-            'text' => $response->get_success()
-                ? (string) ($response->get_response_data()['generatedcontent'] ?? '')
-                : '',
-            'error' => $response->get_success() ? '' : $response->get_errormessage(),
+            'success' => $outcome->success,
+            'text' => (string) ($outcome->data['generatedcontent'] ?? ''),
+            'error' => $outcome->error,
         ];
     }
 

@@ -96,4 +96,42 @@ class media_request {
         // A recording is transcribed, so whatever was typed has nowhere to go.
         return new transcript_audio(contextid: $contextid, userid: $userid, file: $file);
     }
+
+    /**
+     * Run an action and report what came back, including a refusal.
+     *
+     * A provider is expected to return a failed response rather than throw, and every
+     * placement Moodle ships takes that on trust. One kind of failure cannot be said
+     * that way: core tries each provider in turn until one succeeds, so a provider
+     * that turned a request down as a matter of policy has no way of saying that the
+     * answer is no rather than "not me". The AI Router says it by throwing, which is
+     * the only thing that stops core's loop.
+     *
+     * Being told no is not an error on this plugin's part, and it should not look like
+     * one, so the refusal is turned back into the same shape as any other failure and
+     * shown as a message. The class named here belongs to another plugin and is simply
+     * never matched on a site without it; nothing else is caught, so a provider that
+     * throws because something is genuinely wrong still surfaces as it should.
+     *
+     * @param manager $manager The AI manager.
+     * @param base $action The action to run.
+     * @return \stdClass success (bool), data (array) and error (string).
+     */
+    public static function run(manager $manager, base $action): \stdClass {
+        try {
+            $response = $manager->process_action($action);
+        } catch (\aiprovider_router\exception\declined_request $e) {
+            return (object) ['success' => false, 'data' => [], 'error' => $e->getMessage()];
+        }
+
+        if (!$response->get_success()) {
+            return (object) [
+                'success' => false,
+                'data' => [],
+                'error' => (string) $response->get_errormessage(),
+            ];
+        }
+
+        return (object) ['success' => true, 'data' => $response->get_response_data(), 'error' => ''];
+    }
 }

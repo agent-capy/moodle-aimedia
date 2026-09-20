@@ -109,16 +109,15 @@ if ($actions && $accepted && ($data = $form->get_data())) {
         // is in a finally: an exception on the way through must not be the reason a
         // recording stays on the site.
         try {
-            $response = $manager->process_action($action);
-            if ($response->get_success()) {
-                $payload = $response->get_response_data();
+            $outcome = media_request::run($manager, $action);
+            if ($outcome->success) {
                 $result = (object) [
-                    'text' => (string) ($payload['transcript'] ?? $payload['generatedcontent'] ?? ''),
-                    'model' => (string) ($payload['model'] ?? ''),
+                    'text' => (string) ($outcome->data['transcript'] ?? $outcome->data['generatedcontent'] ?? ''),
+                    'model' => (string) ($outcome->data['model'] ?? ''),
                     'filename' => $file->get_filename(),
                 ];
             } else {
-                $failure = $response->get_errormessage();
+                $failure = $outcome->error;
             }
         } finally {
             $file->delete();

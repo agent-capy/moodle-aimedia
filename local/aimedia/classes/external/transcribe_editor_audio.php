@@ -111,7 +111,7 @@ class transcribe_editor_audio extends external_api {
             ];
         }
 
-        $response = $manager->process_action(media_request::make(
+        $outcome = media_request::run($manager, media_request::make(
             class: transcript_audio::class,
             contextid: $context->id,
             userid: (int) $USER->id,
@@ -119,11 +119,9 @@ class transcribe_editor_audio extends external_api {
         ));
 
         return [
-            'success' => $response->get_success(),
-            'text' => $response->get_success()
-                ? (string) ($response->get_response_data()['transcript'] ?? '')
-                : '',
-            'error' => $response->get_success() ? '' : $response->get_errormessage(),
+            'success' => $outcome->success,
+            'text' => (string) ($outcome->data['transcript'] ?? ''),
+            'error' => $outcome->error,
         ];
     }
 

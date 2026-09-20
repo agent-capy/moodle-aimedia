@@ -120,4 +120,93 @@ final class media_request_test extends \advanced_testcase {
             $this->upload('anything.mp3'),
         );
     }
+
+    /**
+     * A manager that returns the given response when an action is run through it.
+     *
+     * @param \core_ai\aiactions\responses\response_base $response What comes back.
+     * @return \core_ai\manager The stand in.
+     */
+    protected function manager_returning(\core_ai\aiactions\responses\response_base $response): \core_ai\manager {
+        $manager = $this->createStub(\core_ai\manager::class);
+        $manager->method('process_action')->willReturn($response);
+
+        return $manager;
+    }
+
+    /**
+     * A manager that throws when an action is run through it.
+     *
+     * @param \Throwable $thrown What it throws.
+     * @return \core_ai\manager The stand in.
+     */
+    protected function manager_throwing(\Throwable $thrown): \core_ai\manager {
+        $manager = $this->createStub(\core_ai\manager::class);
+        $manager->method('process_action')->willThrowException($thrown);
+
+        return $manager;
+    }
+
+    public function test_a_provider_that_turns_the_request_down_is_a_message_not_a_crash(): void {
+        // A provider says "no" by throwing, because core's own loop would otherwise
+        // hand the request to the next provider. Being told no is an answer, and this
+        // plugin shows it as one rather than as an error page.
+        $refusal = '\aiprovider_router\exception\declined_request';
+        if (!class_exists($refusal)) {
+            $this->markTestSkipped('The AI Router is not installed on this site.');
+        }
+
+        $outcome = media_request::run(
+            $this->manager_throwing(new $refusal('budget_exhausted', 'error:budgetexhausted')),
+            media_request::make(
+                class: transcript_audio::class,
+                contextid: \context_system::instance()->id,
+                userid: (int) get_admin()->id,
+                file: $this->upload('recording.ogg'),
+            ),
+        );
+
+        $this->assertFalse($outcome->success);
+        $this->assertSame([], $outcome->data);
+        $this->assertNotEmpty($outcome->error);
+    }
+
+    public function test_an_ordinary_failure_still_reads_the_same_way(): void {
+        $response = $this->createStub(\core_ai\aiactions\responses\response_base::class);
+        $response->method('get_success')->willReturn(false);
+        $response->method('get_errormessage')->willReturn('The service is down');
+
+        $outcome = media_request::run(
+            $this->manager_returning($response),
+            media_request::make(
+                class: describe_image::class,
+                contextid: \context_system::instance()->id,
+                userid: (int) get_admin()->id,
+                file: $this->upload('picture.png'),
+            ),
+        );
+
+        $this->assertFalse($outcome->success);
+        $this->assertSame('The service is down', $outcome->error);
+    }
+
+    public function test_a_successful_answer_comes_back_whole(): void {
+        $response = $this->createStub(\core_ai\aiactions\responses\response_base::class);
+        $response->method('get_success')->willReturn(true);
+        $response->method('get_response_data')->willReturn(['transcript' => 'What was said']);
+
+        $outcome = media_request::run(
+            $this->manager_returning($response),
+            media_request::make(
+                class: transcript_audio::class,
+                contextid: \context_system::instance()->id,
+                userid: (int) get_admin()->id,
+                file: $this->upload('recording2.ogg'),
+            ),
+        );
+
+        $this->assertTrue($outcome->success);
+        $this->assertSame('What was said', $outcome->data['transcript']);
+        $this->assertSame('', $outcome->error);
+    }
 }
