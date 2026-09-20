@@ -81,7 +81,7 @@ class behat_tiny_aimedia extends behat_base {
             ? 'new Promise(() => {})'
             : 'Promise.resolve({success: true, text: ' . json_encode($answer) . '})';
 
-        // require() is asynchronous. Firing it and pressing the button would race, and
+        // Loading the module is asynchronous. Firing it and pressing the button would race, and
         // the race was lost every time: the real web service answered instead and the
         // scenario tested nothing. So a flag is set once it is really in place, and
         // the step waits for the flag.
@@ -120,7 +120,7 @@ class behat_tiny_aimedia extends behat_base {
      * same: an editor can be showing something it would not save, and this plugin
      * relies on that.
      *
-     * @Then /^the "(?P<locator_string>(?:[^"]|\\")*)" TinyMCE editor content should( not)? contain "(?P<needle_string>(?:[^"]|\\")*)"$/
+     * @Then /^the "([^"]*)" TinyMCE editor content should contain "([^"]*)"$/
      * @param string $locator The editor.
      * @param string $needle What to look for.
      * @throws ExpectationException When the content does not say what it should.
@@ -181,7 +181,7 @@ class behat_tiny_aimedia extends behat_base {
     /**
      * Check the alt text of the picture, which is what the button writes.
      *
-     * @Then /^the picture in the "(?P<locator_string>(?:[^"]|\\")*)" TinyMCE editor should be described as "(?P<alt_string>(?:[^"]|\\")*)"$/
+     * @Then /^the picture in the "([^"]*)" TinyMCE editor should be described as "([^"]*)"$/
      * @param string $locator The editor holding it.
      * @param string $alt What the alt text should say. "nothing" for an empty one.
      * @throws ExpectationException When it says something else.
