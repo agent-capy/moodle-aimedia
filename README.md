@@ -73,6 +73,17 @@ you may send it is that component's judgement, not this plugin's.
 
 ⚠ What a model heard is inserted as **text, never as markup**.
 
+⭐ **Nothing is written into the page until there is an answer to write.** While a
+request is out the editor shows its own busy overlay, which is not content. A
+placeholder in the text would be in the page the moment somebody saved, whether
+or not the answer ever arrived, and a second press would have read it as the
+text to put back.
+
+⭐ **One press of a button is one press of undo.** The result goes in as an undo
+step, which also tells the editor it has been changed, so the "you have unsaved
+work" prompts see it. An answer that arrives after the image, the recording or
+the editor has gone is dropped rather than written somewhere else.
+
 ⚠ The site's **AI usage policy** has to be accepted before either button sends
 anything. Core does not check it on the way through, so the buttons check it
 themselves; the page is where somebody reads and accepts it.

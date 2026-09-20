@@ -33,4 +33,3 @@ $string['pluginname'] = 'AI media';
 $string['privacy:metadata'] = 'The AI media editor button stores no personal data. What it sends is declared by the AI media actions plugin.';
 $string['prompt'] = 'Write alt text for this image: one sentence, plain, describing what a reader who cannot see it needs to know. Do not begin with \"an image of\".';
 $string['transcribe'] = 'Transcribe this recording';
-$string['working'] = 'Asking…';
