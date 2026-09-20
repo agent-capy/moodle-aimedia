@@ -14,14 +14,14 @@
 // You should have received a copy of the GNU General Public License
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
-namespace local_aiaudio\aiactions;
+namespace local_aimedia\aiactions;
 
-use local_aiaudio\aiactions\responses\response_transcript_audio;
+use local_aimedia\aiactions\responses\response_transcript_audio;
 
 /**
  * Tests for the transcribe audio action.
  *
- * @package    local_aiaudio
+ * @package    local_aimedia
  * @copyright  2026 UDAGAWA Mitsuru
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
@@ -44,7 +44,7 @@ final class transcript_audio_test extends \advanced_testcase {
     protected function recording(string $contents = 'not really audio', string $filename = 'lecture.mp3'): \stored_file {
         return get_file_storage()->create_file_from_string([
             'contextid' => \context_system::instance()->id,
-            'component' => 'local_aiaudio',
+            'component' => 'local_aimedia',
             'filearea' => 'draft',
             'itemid' => 1,
             'filepath' => '/',
@@ -91,7 +91,7 @@ final class transcript_audio_test extends \advanced_testcase {
         ]);
 
         $id = $action->store($response);
-        $record = $DB->get_record('local_aiaudio_transcript', ['id' => $id]);
+        $record = $DB->get_record('local_aimedia_transcript', ['id' => $id]);
 
         $this->assertSame('こんにちは', $record->transcript);
         $this->assertSame('seminar.mp3', $record->filename);

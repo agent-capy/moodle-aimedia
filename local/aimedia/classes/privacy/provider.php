@@ -14,7 +14,7 @@
 // You should have received a copy of the GNU General Public License
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
-namespace local_aiaudio\privacy;
+namespace local_aimedia\privacy;
 
 use core_privacy\local\metadata\collection;
 use core_privacy\local\request\approved_contextlist;
@@ -23,14 +23,15 @@ use core_privacy\local\request\contextlist;
 use core_privacy\local\request\userlist;
 
 /**
- * Privacy provider for local_aiaudio.
+ * Privacy provider for local_aimedia.
  *
  * ⚠ What this plugin keeps is closer to a person than most plugin data: a
- * transcript is the words somebody said. The recording is not kept, only its
- * content hash, and the table names nobody, which is why there is nothing to
- * export or delete per user here.
+ * transcript is the words somebody said, and a picture somebody uploaded may show
+ * them. Neither the recording nor the picture is kept, only its content hash, and
+ * the tables name nobody, which is why there is nothing to export or delete per
+ * user here.
  *
- * @package    local_aiaudio
+ * @package    local_aimedia
  * @copyright  2026 UDAGAWA Mitsuru
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
@@ -41,13 +42,23 @@ class provider implements
     #[\Override]
     public static function get_metadata(collection $collection): collection {
         $collection->add_database_table(
-            'local_aiaudio_transcript',
+            'local_aimedia_transcript',
             [
                 'filename' => 'privacy:metadata:transcript:filename',
                 'transcript' => 'privacy:metadata:transcript:transcript',
                 'timecreated' => 'privacy:metadata:transcript:timecreated',
             ],
             'privacy:metadata:transcript',
+        );
+        $collection->add_database_table(
+            'local_aimedia_describe',
+            [
+                'prompt' => 'privacy:metadata:describe:prompt',
+                'filename' => 'privacy:metadata:describe:filename',
+                'generatedcontent' => 'privacy:metadata:describe:generatedcontent',
+                'timecreated' => 'privacy:metadata:describe:timecreated',
+            ],
+            'privacy:metadata:describe',
         );
 
         return $collection;

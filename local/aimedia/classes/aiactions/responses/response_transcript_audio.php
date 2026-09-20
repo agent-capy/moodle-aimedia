@@ -14,14 +14,14 @@
 // You should have received a copy of the GNU General Public License
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
-namespace local_aiaudio\aiactions\responses;
+namespace local_aimedia\aiactions\responses;
 
 use core_ai\aiactions\responses\response_base;
 
 /**
  * What a transcription came back with.
  *
- * @package    local_aiaudio
+ * @package    local_aimedia
  * @copyright  2026 UDAGAWA Mitsuru
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */

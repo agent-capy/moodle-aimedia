@@ -14,51 +14,44 @@
 // You should have received a copy of the GNU General Public License
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
-namespace local_aiaudio\aiactions;
+namespace local_aimedia\aiactions;
 
 use core_ai\aiactions\base;
 use core_ai\aiactions\responses\response_base;
 
 /**
- * Turn a recording into text.
+ * Ask about a picture.
  *
- * Moodle's AI subsystem has four actions and every one of them takes text in.
- * Nothing in core asks an AI to listen to something, so this action is defined
- * here rather than in core_ai, and providers that can transcribe declare it the
- * same way they declare core's actions.
+ * Moodle's generate_image writes text and returns a picture. Nothing in core goes
+ * the other way, so a vision model has no action to be reached through. This is
+ * that action: a picture and a question about it, answered in text.
  *
- * ⚠ Three places in core build an action's class name as 'core_ai\\aiactions\\'
- * plus its basename, so an action living anywhere else is not found there. The
- * one that bites is the enable/disable switch on the provider settings screen:
- * it writes to a key nothing reads, so this action cannot be switched off from
- * that screen. It arrives switched on and stays that way. Use a routing rule to
- * stop it. This is written up as a report for core.
+ * ⚠ Core builds an action's class name from its own namespace in three places, so
+ * an action defined here is not found there. The one that shows is the enable and
+ * disable switch on the provider settings screen, which writes a key nothing
+ * reads. Stop this action with a routing rule instead.
  *
- * @package    local_aiaudio
+ * @package    local_aimedia
  * @copyright  2026 UDAGAWA Mitsuru
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
-class transcript_audio extends base {
+class describe_image extends base {
     /**
      * Constructor.
      *
-     * The recording is passed as a stored file rather than as its contents,
-     * because the router may offer the same request to more than one provider
-     * and a stream read once is empty the second time.
-     *
      * @param int $contextid The context the request was raised in.
      * @param int $userid The user making the request.
-     * @param \stored_file $file The recording to transcribe.
-     * @param string $language The language spoken, as an ISO-639-1 code, or empty to let the model decide.
+     * @param \stored_file $file The picture to ask about.
+     * @param string $prompttext What to ask about it.
      */
     public function __construct(
         int $contextid,
         /** @var int The user id requesting the action. */
         protected int $userid,
-        /** @var \stored_file The recording to transcribe. */
+        /** @var \stored_file The picture to ask about. */
         protected \stored_file $file,
-        /** @var string The language spoken, or an empty string. */
-        protected string $language = '',
+        /** @var string What to ask about the picture. */
+        protected string $prompttext = '',
     ) {
         parent::__construct($contextid);
     }
@@ -66,14 +59,10 @@ class transcript_audio extends base {
     /**
      * The class that carries this action's answer.
      *
-     * Core has this method and then does not call it: manager.php rebuilds the
-     * name from core_ai's own namespace instead. Overridden anyway, so that the
-     * day core calls it, this action already answers correctly.
-     *
      * @return string The response class name.
      */
     public static function get_response_classname(): string {
-        return responses\response_transcript_audio::class;
+        return responses\response_describe_image::class;
     }
 
     /**
@@ -82,7 +71,7 @@ class transcript_audio extends base {
      * @return string The name.
      */
     public static function get_name(): string {
-        return get_string('action:transcript_audio', 'local_aiaudio');
+        return get_string('action:describe_image', 'local_aimedia');
     }
 
     /**
@@ -91,13 +80,35 @@ class transcript_audio extends base {
      * @return string The description.
      */
     public static function get_description(): string {
-        return get_string('action:transcript_audio:description', 'local_aiaudio');
+        return get_string('action:describe_image:description', 'local_aimedia');
+    }
+
+    /**
+     * What the model is told before the user's question.
+     *
+     * Core reads this from its own language strings, which have nothing for an
+     * action it does not define, so it is supplied here.
+     *
+     * @return string The instruction.
+     */
+    public static function get_system_instruction(): string {
+        return get_string('action:describe_image:instruction', 'local_aimedia');
+    }
+
+    /**
+     * What to ask when the caller asked nothing in particular.
+     *
+     * @return string The question.
+     */
+    public function get_question(): string {
+        return $this->prompttext !== ''
+            ? $this->prompttext
+            : get_string('action:describe_image:defaultprompt', 'local_aimedia');
     }
 
     #[\Override]
     protected function get_tablename(): string {
-        // Not core's ai_action_* namespace: this action is not core's to store.
-        return 'local_aiaudio_transcript';
+        return 'local_aimedia_describe';
     }
 
     #[\Override]
@@ -107,12 +118,14 @@ class transcript_audio extends base {
         $responsearr = $response->get_response_data();
 
         $record = new \stdClass();
+        $record->prompt = $this->get_question();
         $record->contenthash = $this->file->get_contenthash();
         $record->filename = $this->file->get_filename();
         $record->filesize = $this->file->get_filesize();
-        $record->language = $this->language === '' ? null : $this->language;
-        $record->transcript = $responsearr['transcript'] ?? null;
-        $record->durationms = $responsearr['durationms'] ?? null;
+        $record->generatedcontent = $responsearr['generatedcontent'] ?? null;
+        $record->finishreason = $responsearr['finishreason'] ?? null;
+        $record->prompttokens = $responsearr['prompttokens'] ?? null;
+        $record->completiontokens = $responsearr['completiontokens'] ?? null;
         $record->timecreated = $this->timecreated;
 
         return $DB->insert_record($this->get_tablename(), $record);

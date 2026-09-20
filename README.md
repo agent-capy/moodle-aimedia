@@ -1,4 +1,4 @@
-# AI audio actions for Moodle (`local_aiaudio`)
+# AI audio actions for Moodle (`local_aimedia`)
 
 Defines an AI action Moodle does not have: **transcribe a recording**.
 
@@ -12,7 +12,7 @@ offer the action, and something has to raise it.
 
 ## Status
 
-- Component: `local_aiaudio`
+- Component: `local_aimedia`
 - Required Moodle version: `2025041400` (Moodle 5.0.0 or later)
 - Maturity: `MATURITY_ALPHA`
 
@@ -38,7 +38,7 @@ switch.** This has been written up for core.
 
 ## What is stored
 
-`local_aiaudio_transcript`: the transcript, the recording's content hash, its
+`local_aimedia_transcript`: the transcript, the recording's content hash, its
 name and size, and when it happened. ⚠ **The recording itself is not kept.**
 A transcript is the words somebody said, so the table names nobody.
 

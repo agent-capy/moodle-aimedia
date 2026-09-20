@@ -15,16 +15,16 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * Version details for local_aiaudio.
+ * Version details for local_aimedia.
  *
- * @package    local_aiaudio
+ * @package    local_aimedia
  * @copyright  2026 UDAGAWA Mitsuru
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
 defined('MOODLE_INTERNAL') || die();
 
-$plugin->component = 'local_aiaudio';
+$plugin->component = 'local_aimedia';
 $plugin->version = 2026092000;
 $plugin->requires = 2025041400; // Moodle 5.0.0 or later.
 $plugin->maturity = MATURITY_ALPHA;
