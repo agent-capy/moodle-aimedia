@@ -71,6 +71,11 @@ the player, and only a draft file of your own can be resolved to one — a file
 already saved into a page belongs to whichever component saved it, and whether
 you may send it is that component's judgement, not this plugin's.
 
+⭐ **A picture that has just been pasted is not a file yet.** TinyMCE holds it in
+memory behind a `blob:` address and uploads it into your draft area in the
+background. The button asks for that upload and waits for it before sending
+anything, which is what the editor does for itself when the form is saved.
+
 ⚠ What a model heard is inserted as **text, never as markup**.
 
 ⭐ **Nothing is written into the page until there is an answer to write.** While a
