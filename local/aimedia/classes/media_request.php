@@ -135,7 +135,7 @@ class media_request {
 
         try {
             $response = $manager->process_action($action);
-        } catch (\aiprovider_router\exception\declined_request $e) {
+        } catch (\local_airouter\exception\declined_request $e) {
             return (object) ['success' => false, 'data' => [], 'error' => $e->getMessage()];
         }
 

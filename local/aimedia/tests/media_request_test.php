@@ -151,7 +151,7 @@ final class media_request_test extends \advanced_testcase {
         // A provider says "no" by throwing, because core's own loop would otherwise
         // hand the request to the next provider. Being told no is an answer, and this
         // plugin shows it as one rather than as an error page.
-        $refusal = '\aiprovider_router\exception\declined_request';
+        $refusal = '\local_airouter\exception\declined_request';
         if (!class_exists($refusal)) {
             $this->markTestSkipped('The AI Router is not installed on this site.');
         }
