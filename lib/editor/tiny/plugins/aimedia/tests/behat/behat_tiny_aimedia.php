@@ -273,10 +273,16 @@ class behat_tiny_aimedia extends behat_base {
     }
 
     /**
-     * Check what the picture's address looks like at this moment.
+     * Check what the picture's address looks like.
      *
      * The whole of the bug this exists for is in the address, so the step says what it
      * expects the address to look like rather than only that a picture is there.
+     *
+     * Waited for rather than read once. A pasted picture goes into the editor as a
+     * blob straight away and is uploaded afterwards, so the address changes at a
+     * moment nothing on the page announces. Reading it once passed almost always and
+     * failed occasionally, which is the worst of both: the run that fails sends
+     * somebody looking for a fault in the plugin that is not there.
      *
      * @Then /^the picture in the "(?P<locator_string>(?:[^"]|\\")*)" TinyMCE editor should be a "(?P<kind_string>(?:[^"]|\\")*)"$/
      * @param string $locator The editor holding it.
@@ -287,11 +293,6 @@ class behat_tiny_aimedia extends behat_base {
         $this->require_tiny_tags();
         $editorid = $this->get_textarea_for_locator($locator)->getAttribute('id');
 
-        $src = (string) $this->evaluate_javascript_for_editor($editorid, <<<'JS'
-            const image = instance.getBody().querySelector('img');
-            resolve(image ? image.getAttribute('src') : '');
-        JS);
-
         $expected = match ($kind) {
             'blob' => 'blob:',
             'draft file' => '/draftfile.php',
@@ -301,11 +302,22 @@ class behat_tiny_aimedia extends behat_base {
             default => throw new ExpectationException("Unknown kind of address: {$kind}", $this->getSession()),
         };
 
-        if (!str_contains($src, $expected)) {
-            throw new ExpectationException(
-                "Expected a {$kind} address containing '{$expected}', found '{$src}'",
-                $this->getSession(),
-            );
-        }
+        $this->spin(
+            function () use ($editorid, $kind, $expected): bool {
+                $src = (string) $this->evaluate_javascript_for_editor($editorid, <<<'JS'
+                    const image = instance.getBody().querySelector('img');
+                    resolve(image ? image.getAttribute('src') : '');
+                JS);
+
+                if (!str_contains($src, $expected)) {
+                    throw new ExpectationException(
+                        "Expected a {$kind} address containing '{$expected}', found '{$src}'",
+                        $this->getSession(),
+                    );
+                }
+
+                return true;
+            },
+        );
     }
 }
