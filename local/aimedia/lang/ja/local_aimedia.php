@@ -38,6 +38,7 @@ $string['error:noprovider'] = 'このサイトのAIプロバイダは、どち�
 $string['error:notadraftaudio'] = 'その録音は、いまこのエディタで録音したものではないため送れません。録音し直してからもう一度お試しください。';
 $string['error:notadraftimage'] = 'その画像は、いまこのエディタに追加したものではないため送れません。挿入し直してからもう一度お試しください。';
 $string['error:policynotaccepted'] = 'このサイトのAI利用ポリシーにまだ同意していません。AI メディアの画面を一度開いて内容を確認し、同意してからもう一度お試しください。';
+$string['error:requestfailed'] = 'AIサービスへの要求が失敗しましたが、理由は返ってきませんでした。もう一度お試しください。続くようであれば管理者にお知らせください。';
 $string['error:unknownaction'] = 'この画面が提供していないアクションです。';
 $string['form:action'] = '何をするか';
 $string['form:file'] = '録音または画像';

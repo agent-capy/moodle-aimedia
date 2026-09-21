@@ -38,6 +38,7 @@ $string['error:noprovider'] = 'No AI provider on this site can carry out either 
 $string['error:notadraftaudio'] = 'That recording is not one you have just made in this editor, so it cannot be sent. Record it again and try once more.';
 $string['error:notadraftimage'] = 'That picture is not one you have just added to this editor, so it cannot be sent. Insert it again and try once more.';
 $string['error:policynotaccepted'] = 'You have not yet accepted this site\'s AI usage policy. Open the AI media page once to read and accept it, then try again.';
+$string['error:requestfailed'] = 'Something went wrong on the way to the AI service, and it did not say what. Try again, and tell an administrator if it keeps happening.';
 $string['error:unknownaction'] = 'That is not an action this page offers.';
 $string['form:action'] = 'What to do';
 $string['form:file'] = 'Recording or picture';

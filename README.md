@@ -18,6 +18,8 @@ smallest things that raise them — a page and an editor button.
 - Components: `local_aimedia` (the actions) and `tiny_aimedia` (the editor buttons)
 - Required Moodle version: `2025041400` (Moodle 5.0.0 or later)
 - Maturity: `MATURITY_ALPHA`
+- Response classes checked against the source of 5.0.0, 5.0.9+, 5.1, 5.2 and 5.3beta
+  by `dev/deploy/response-contract.sh`. Run on 5.0.9.
 
 ## ⚠ What core does with an action it did not define
 
@@ -43,6 +45,28 @@ switch.** This has been written up for core.
 that instance but not enabled, because `actionconfig` is written once at
 creation. There is no way to fix that from the settings screen;
 `update_provider_instance()` adds the missing keys without touching the rest.
+
+### ⚠⚠ A failed response is not built the same way on every release
+
+Moodle 5.1 swapped which field a failed response must carry. Core updated its own
+response classes when it made the change; an action defined outside core owns its
+response class, and one file has to satisfy every supported release, because core
+passes these by name.
+
+| Release | A failure must carry | The argument |
+| --- | --- | --- |
+| 5.0.x | `errorcode` and **`errormessage`** | there is no `error` argument |
+| 5.1, 5.2, 5.3 | `errorcode` and **`error`** (a short name) | `errormessage` may be empty |
+
+Before this was handled, these actions could not report a failure at all on 5.1 or
+later: `core_ai\process_base` passes `error:` by name, and the response class did
+not accept it. `response_media_base` now takes both, gives its parent only what that
+parent accepts, and fills in whichever one it insists on. It reads that from the
+parent rather than from the version number, because the change has been backported.
+
+⚠ The page falls back to a general message when a failure arrives with nothing to
+show, which 5.1 onwards allows: the field it does insist on names the fault for a
+log rather than for the person who asked.
 
 ## In the editor
 

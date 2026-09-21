@@ -16,8 +16,6 @@
 
 namespace local_aimedia\aiactions\responses;
 
-use core_ai\aiactions\responses\response_base;
-
 /**
  * What a transcription came back with.
  *
@@ -25,7 +23,7 @@ use core_ai\aiactions\responses\response_base;
  * @copyright  2026 UDAGAWA Mitsuru
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
-class response_transcript_audio extends response_base {
+class response_transcript_audio extends response_media_base {
     /** @var string|null The text the model heard. */
     private ?string $transcript = null;
 
@@ -35,19 +33,25 @@ class response_transcript_audio extends response_base {
     /**
      * Constructor.
      *
+     * The arguments are the ones core passes on its newest supported release. The
+     * parent sorts out what this release's own parent will accept.
+     *
      * @param bool $success The success status of the action.
      * @param int $errorcode Error code. Must exist if success is false.
-     * @param string $errormessage Error message. Must exist if success is false.
+     * @param string $error Short error name. Required by Moodle 5.1 and later.
+     * @param string $errormessage Error message. Required by Moodle 5.0.
      */
     public function __construct(
         bool $success,
         int $errorcode = 0,
+        string $error = '',
         string $errormessage = '',
     ) {
         parent::__construct(
             success: $success,
             actionname: 'transcript_audio',
             errorcode: $errorcode,
+            error: $error,
             errormessage: $errormessage,
         );
     }

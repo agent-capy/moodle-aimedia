@@ -17,6 +17,7 @@
 namespace local_aimedia;
 
 use core_ai\aiactions\base;
+use core_ai\aiactions\responses\response_base;
 use core_ai\manager;
 use local_aimedia\aiactions\describe_image;
 use local_aimedia\aiactions\transcript_audio;
@@ -143,10 +144,27 @@ class media_request {
             return (object) [
                 'success' => false,
                 'data' => [],
-                'error' => (string) $response->get_errormessage(),
+                'error' => self::failure_message($response),
             ];
         }
 
         return (object) ['success' => true, 'data' => $response->get_response_data(), 'error' => ''];
+    }
+
+    /**
+     * What to put on the screen when the request failed.
+     *
+     * Moodle 5.1 made the message optional on a failed response and moved the part it
+     * insists on into a short error name, which names the fault for a log rather than
+     * saying anything to the person who asked. So a failure can arrive with nothing
+     * worth showing, and an empty error box is worse than a plain sentence.
+     *
+     * @param response_base $response The failed response.
+     * @return string Something the person can read.
+     */
+    protected static function failure_message(response_base $response): string {
+        $message = trim((string) $response->get_errormessage());
+
+        return $message !== '' ? $message : get_string('error:requestfailed', 'local_aimedia');
     }
 }

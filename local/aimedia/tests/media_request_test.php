@@ -190,6 +190,28 @@ final class media_request_test extends \advanced_testcase {
         $this->assertSame('The service is down', $outcome->error);
     }
 
+    public function test_a_failure_that_says_nothing_still_shows_something(): void {
+        // From Moodle 5.1 the message on a failed response is optional: what the
+        // release insists on is a short error name, which is for the log. Passing
+        // that straight through would leave the person looking at an empty box.
+        $response = $this->createStub(\core_ai\aiactions\responses\response_base::class);
+        $response->method('get_success')->willReturn(false);
+        $response->method('get_errormessage')->willReturn('');
+
+        $outcome = media_request::run(
+            $this->manager_returning($response),
+            media_request::make(
+                class: describe_image::class,
+                contextid: \context_system::instance()->id,
+                userid: (int) get_admin()->id,
+                file: $this->upload('picture.png'),
+            ),
+        );
+
+        $this->assertFalse($outcome->success);
+        $this->assertSame(get_string('error:requestfailed', 'local_aimedia'), $outcome->error);
+    }
+
     public function test_a_successful_answer_comes_back_whole(): void {
         $response = $this->createStub(\core_ai\aiactions\responses\response_base::class);
         $response->method('get_success')->willReturn(true);
