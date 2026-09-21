@@ -92,6 +92,24 @@ final class purge_submitted_test extends \advanced_testcase {
         $this->assertSame(0, $this->held(1));
     }
 
+    public function test_every_abandoned_area_in_a_context_is_removed(): void {
+        // Two requests from the same place, which is the ordinary case: a course, or
+        // the site context that every request outside a course lands in. A query that
+        // returns its rows keyed by the context would see one of these and leave the
+        // other for ever.
+        $this->leave_behind(11, purge_submitted::MAX_AGE + HOURSECS);
+        $this->leave_behind(12, purge_submitted::MAX_AGE + HOURSECS);
+        $this->leave_behind(13, purge_submitted::MAX_AGE + HOURSECS);
+
+        ob_start();
+        (new purge_submitted())->execute();
+        ob_end_clean();
+
+        $this->assertSame(0, $this->held(11));
+        $this->assertSame(0, $this->held(12));
+        $this->assertSame(0, $this->held(13));
+    }
+
     public function test_a_request_that_may_still_be_running_is_left_alone(): void {
         // The one mistake worth avoiding. A file taken while somebody is waiting on
         // it turns a slow answer into no answer.

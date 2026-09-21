@@ -57,7 +57,11 @@ class purge_submitted extends \core\task\scheduled_task {
         global $DB;
 
         $storage = get_file_storage();
-        $areas = $DB->get_records_sql(
+        // A recordset, not get_records_sql(). That one returns the rows keyed by the
+        // first column, so two areas in the same context -- two requests from the same
+        // course, which is the ordinary case -- would collapse into one and only one
+        // of them would ever be removed.
+        $areas = $DB->get_recordset_sql(
             "SELECT contextid, itemid, MAX(timecreated) AS newest
                FROM {files}
               WHERE component = :component AND filearea = :filearea
@@ -83,6 +87,7 @@ class purge_submitted extends \core\task\scheduled_task {
             );
             $removed++;
         }
+        $areas->close();
 
         if ($removed > 0) {
             mtrace("local_aimedia: removed {$removed} abandoned upload(s).");
