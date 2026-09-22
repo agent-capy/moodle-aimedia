@@ -11,7 +11,42 @@ declare, and so that the AI Router can route such a request.
 
 It is a definition, not a feature: on its own it does nothing. A provider has to
 offer the action, and something has to raise it. This plugin also ships the two
-smallest things that raise them — a page and an editor button.
+smallest things that raise them — a page and an editor button. What it cannot
+ship is the provider, and no provider Moodle ships will do.
+
+## ⚠⚠ This needs a provider that declares these actions
+
+**No AI provider that ships with Moodle can carry either of them.** Every
+provider in 5.0, 5.1, 5.2 and 5.3beta — `openai`, `azureai`, `ollama`,
+`awsbedrock`, `deepseek`, `gemini`, `anthropic` — lists only actions `core_ai`
+itself defines. On a site with nothing else installed, this plugin has nowhere
+to send a request, and installing it changes nothing anybody can see.
+
+A provider that does carry them has to do two things:
+
+| | |
+| --- | --- |
+| **Declare the action** | `get_action_list()` returns `local_aimedia\aiactions\transcript_audio` and/or `local_aimedia\aiactions\describe_image` |
+| **Carry it out** | A `process_transcript_audio` / `process_describe_image` class **in the provider's own namespace**, because `core_ai\manager::call_action_provider()` builds that name from the first segment of the provider class's namespace |
+
+⚠ A provider that lists an action whose class is not installed makes the
+provider settings screen fatal — that screen asks every listed action for its
+own name. Guard the list with `class_exists()` and the same provider works with
+and without this plugin.
+
+⭐ **Routing is not a substitute.** `local_airouter` declares both actions so
+that rules can be written about them, but it delegates: what answers is still a
+provider that carries the action.
+
+Until one does:
+
+| Where | What you see |
+| --- | --- |
+| `/local/aimedia/index.php` | A warning in place of the form, before anything is uploaded |
+| The editor buttons | Drawn as usual, and they say the same thing when pressed |
+
+`aiprovider_sakuraaiengine` carries both, and is the provider these actions were
+written against.
 
 ## Status
 
