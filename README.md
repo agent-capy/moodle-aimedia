@@ -7,14 +7,14 @@ Moodle 5.0's AI subsystem has four actions and every one of them takes text in.
 `generate_image` writes text and returns a picture; nothing asks an AI to listen,
 and nothing asks it to look. This plugin adds `transcript_audio` and
 `describe_image` so that providers which can do these things have something to
-declare, and so that the AI Router can route such a request.
+declare.
 
 It is a definition, not a feature: on its own it does nothing. A provider has to
 offer the action, and something has to raise it. This plugin also ships the two
 smallest things that raise them — a page and an editor button. What it cannot
 ship is the provider, and no provider Moodle ships will do.
 
-## ⚠⚠ This needs a provider that declares these actions
+## ⚠⚠ This needs a multimodal provider that declares these actions
 
 **No AI provider that ships with Moodle can carry either of them.** Every
 provider in 5.0, 5.1, 5.2 and 5.3beta — `openai`, `azureai`, `ollama`,
@@ -22,7 +22,9 @@ provider in 5.0, 5.1, 5.2 and 5.3beta — `openai`, `azureai`, `ollama`,
 itself defines. On a site with nothing else installed, this plugin has nowhere
 to send a request, and installing it changes nothing anybody can see.
 
-A provider that does carry them has to do two things:
+A site needs an AI provider plugin that can listen to a recording or look at a
+picture, **and that offers these two actions to Moodle**. Being multimodal is
+not enough by itself; offering the actions means two things:
 
 | | |
 | --- | --- |
@@ -34,19 +36,12 @@ provider settings screen fatal — that screen asks every listed action for its
 own name. Guard the list with `class_exists()` and the same provider works with
 and without this plugin.
 
-⭐ **Routing is not a substitute.** `local_airouter` declares both actions so
-that rules can be written about them, but it delegates: what answers is still a
-provider that carries the action.
-
-Until one does:
+Until a provider offers one:
 
 | Where | What you see |
 | --- | --- |
 | `/local/aimedia/index.php` | A warning in place of the form, before anything is uploaded |
 | The editor buttons | Drawn as usual, and they say the same thing when pressed |
-
-`aiprovider_sakuraaiengine` carries both, and is the provider these actions were
-written against.
 
 ## Status
 
@@ -73,8 +68,8 @@ found there. Verified on Moodle 5.0.9:
 `base::get_response_classname()` — and `manager.php` rebuilds the name by hand
 instead of calling it.
 
-**Until that changes, stop these actions with a routing rule rather than with the
-switch.** This has been written up for core.
+**Until that changes, the only way to stop one of these actions is to remove it
+from the provider that offers it.** This has been written up for core.
 
 ⚠ An action added to a site after a provider instance was created is listed on
 that instance but not enabled, because `actionconfig` is written once at
@@ -161,10 +156,10 @@ themselves; the page is where somebody reads and accepts it.
 The buttons are offered only in editors that can hold files, and only to people
 with `local/aimedia:use`.
 
-⭐ **Each request carries the context the editor is in.** That is what makes a
-routing rule about a course apply to it, and what puts it in that course's usage
-report. A request that said nothing about where it came from would match no rule
-and be reported against nothing.
+⭐ **Each request carries the context the editor is in.** That is what puts it in
+that course's usage report, and what lets anything deciding per course see which
+course it came from. A request that said nothing about where it came from would
+be reported against nothing.
 
 ## The page
 
